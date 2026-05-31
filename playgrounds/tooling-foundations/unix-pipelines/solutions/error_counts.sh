@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# TODO: Build a pipeline using tools such as awk, sort, uniq, and head/tail if
-# useful. Keep machine-readable output on stdout and diagnostics on stderr.
-echo "TODO"
-
+awk '$4 >= 500 { counts[$3]++ } END { for (path in counts) print counts[path], path }' \
+  data/access.log |
+  LC_ALL=C sort -k1,1nr -k2,2
