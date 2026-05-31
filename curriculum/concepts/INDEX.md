@@ -1,17 +1,24 @@
 # Concept Library
 
-This directory contains reusable mini-chapters. Exercises should link to these before asking the learner to implement code.
+This directory contains self-contained teaching chapters. Exercises should link here before asking the learner to implement code.
 
-Each concept chapter should answer:
+A concept chapter is not a project description. It should teach the idea well enough that a learner can open an exercise with the right vocabulary, mental model, and invariant already in place.
 
-1. What is the concept?
-2. Why does it exist?
-3. What mental model should the learner use?
-4. What invariant matters?
-5. What small example makes it concrete?
-6. What mistakes do beginners make?
-7. What should the learner be able to answer before coding?
-8. Where can they go deeper?
+## Chapter Standard
+
+| Section | Purpose |
+| --- | --- |
+| What You Should Know First | Names the prerequisite ideas without assuming mastery. |
+| The Problem | Explains why the concept exists and what pain it removes. |
+| Vocabulary | Defines the terms the learner will see in code, tests, papers, and docs. |
+| Mental Model | Gives the learner a simple way to reason about the mechanism. |
+| Core Invariant | States the rule that must remain true for the system to be correct. |
+| Worked Example | Walks through a small concrete scenario. |
+| Implementation Shape | Shows how the idea tends to appear in code without giving full solutions. |
+| Failure Modes | Names the traps that make real systems fail. |
+| Exercise Bridge | Connects the concept to the scaffolded projects in this repo. |
+| Self-Check | Gives questions a learner should answer before coding. |
+| Further Reading | Points to deeper references once the mental model is in place. |
 
 ## Current Chapters
 
@@ -32,3 +39,9 @@ Each concept chapter should answer:
 | Developer Tools | Unix Pipelines | [unix-pipelines.md](developer-tools/unix-pipelines.md) |
 | Developer Tools | Git Object Model | [git-object-model.md](developer-tools/git-object-model.md) |
 | PostgreSQL | Administration Mental Model | [postgres-admin-mental-model.md](postgres/postgres-admin-mental-model.md) |
+
+## How To Use These Chapters
+
+Read the concept chapter before the exercise. Then open the exercise and identify which part of the chapter appears in the placeholder code, which invariant the tests are protecting, and which failure mode the exercise is trying to make visible.
+
+When adding a new exercise, either link to an existing chapter or create a new one. Avoid burying the only explanation inside a single exercise file; reusable concepts should live here.

@@ -1,12 +1,30 @@
 # RAG, Agents, and Tool Use
 
-## Concept
+## What You Should Know First
 
-RAG gives a model external knowledge at answer time. Agents give a model a loop for choosing actions, using tools, observing results, and continuing toward a goal.
+You should know that a language model predicts text from context. It does not automatically know your private documents, current database state, or what happened inside an external tool unless that information is supplied to it.
 
-## Why It Exists
+## The Problem
 
-Language models are useful but bounded by context, training data, and lack of direct access to private systems. RAG connects models to relevant documents. Tool use connects models to actions. Agent runtimes add state, policy, recovery, tracing, and human checkpoints.
+Useful AI applications often need two things beyond a raw model call:
+
+1. relevant external knowledge at answer time
+2. controlled access to actions such as search, database queries, code execution, tickets, or workflows
+
+Retrieval-augmented generation, or RAG, supplies evidence. Tool use supplies actions. Agent runtimes coordinate repeated model decisions, tool calls, observations, state, policy, and recovery.
+
+## Vocabulary
+
+| Term | Meaning |
+| --- | --- |
+| Document chunk | A searchable unit of text or data. |
+| Embedding | Numeric representation used for similarity search. |
+| Retriever | Component that selects candidate evidence for a query. |
+| Reranker | Component that reorders retrieved evidence for relevance. |
+| Tool call | Structured request from model or runtime to an external capability. |
+| Observation | Result returned by a tool. |
+| Agent state | Durable record of goal, messages, tool calls, observations, and decisions. |
+| Policy boundary | Rule that decides what the agent may do without approval. |
 
 ## Mental Model
 
@@ -22,34 +40,56 @@ An agent is a control loop:
 goal -> plan -> tool call -> observation -> update state -> next action
 ```
 
-Production systems often combine both: an agent calls retrieval tools, search tools, code tools, and workflow tools.
+Production systems often combine both. An agent may call retrieval, inspect logs, query a database, ask for approval, and then take a limited action.
 
 ## Core Invariant
 
-The system must keep evidence, actions, and authority boundaries explicit. The model should not silently confuse generated text, retrieved facts, and tool results.
+The system must keep evidence, generated text, tool observations, and authority boundaries explicit.
 
-## Tiny Example
+If these boundaries blur, the model can treat guesses as facts, treat untrusted retrieved text as instructions, or take actions that should have required review.
 
-A support assistant receives "Why did invoice 123 fail?" A RAG-only system retrieves invoice docs and answers. An agentic system might query billing, inspect logs, create a ticket, and ask a human before issuing a refund.
+## Worked Example
 
-## Current Directions
+A support assistant receives: "Why did invoice 123 fail?"
 
-As of May 2026, practical AI systems are moving toward:
+| System Type | Behavior |
+| --- | --- |
+| RAG-only | Retrieve billing docs and answer with citations. |
+| Tool-using | Query invoice status and payment logs, then answer from observations. |
+| Agentic | Plan investigation, call tools, summarize evidence, create a ticket, and ask a human before issuing a refund. |
 
-- graph-structured retrieval for relationship-heavy corpora
-- tool protocols such as MCP
-- durable agent execution with checkpoints and traces
-- human-in-the-loop approval for risky actions
-- evaluation harnesses for retrieval quality, groundedness, and tool safety
-- stronger sandboxing and policy around tool execution
+The last flow is more powerful, but every new action introduces state, security, and recovery concerns.
 
-## Common Misconceptions
+## Implementation Shape
 
-- RAG does not automatically make answers correct; retrieval quality and synthesis matter.
-- Agents are not magic autonomy; they are state machines with probabilistic decision points.
-- Tool access is a security boundary.
-- More retrieved context can make answers worse if it adds distractors.
-- Traces are not optional once tools can mutate real systems.
+A reliable RAG or agent system usually separates:
+
+| Component | Responsibility |
+| --- | --- |
+| Ingestion | Parse, chunk, normalize, and index source material. |
+| Retrieval | Find candidate chunks for a query. |
+| Grounding | Bind answer claims to evidence. |
+| Tool schema | Define tool names, arguments, and return shapes. |
+| Runtime state | Persist messages, calls, observations, and checkpoints. |
+| Policy engine | Decide what is allowed, denied, or requires approval. |
+| Evaluator | Measure retrieval quality, groundedness, tool safety, and task success. |
+
+Do not hide all of this inside one prompt. The prompt is only one part of the system.
+
+## Failure Modes
+
+| Failure | Example |
+| --- | --- |
+| Retrieval miss | The answer is fluent but based on irrelevant context. |
+| Context stuffing | Too many chunks distract the model. |
+| Prompt injection | Retrieved text tells the model to ignore policy. |
+| Tool confusion | The model treats a failed call as a successful observation. |
+| Lost checkpoint | A long-running agent cannot recover after process restart. |
+| Silent mutation | A tool changes real state without trace or approval. |
+
+## Exercise Bridge
+
+RAG exercises should force you to implement chunking, retrieval, citation, and evaluation separately. Agent exercises should force you to model state, tool schemas, retries, approval, and traces. Before coding, name which components are read-only and which can mutate the world.
 
 ## Self-Check
 
@@ -57,7 +97,7 @@ As of May 2026, practical AI systems are moving toward:
 2. Which actions are read-only and which mutate state?
 3. Where can a human approve or stop the workflow?
 4. How do you evaluate retrieval separately from generation?
-5. What happens if a tool call succeeds but the model never observes the result?
+5. What happens if a tool call succeeds but the runtime crashes before recording the observation?
 
 ## Further Reading
 
@@ -65,7 +105,4 @@ As of May 2026, practical AI systems are moving toward:
 - ReAct paper: https://arxiv.org/abs/2210.03629
 - Toolformer paper: https://arxiv.org/abs/2302.04761
 - Model Context Protocol specification: https://modelcontextprotocol.io/specification/latest
-- OpenAI Agents SDK: https://openai.github.io/openai-agents-python/
-- LangGraph docs: https://docs.langchain.com/oss/python/langgraph
 - Microsoft GraphRAG: https://microsoft.github.io/graphrag/
-

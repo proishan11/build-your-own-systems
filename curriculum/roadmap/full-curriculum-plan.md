@@ -17,7 +17,7 @@ The detailed plan is split into roadmap chapters so the curriculum can be read l
 
 | Step | Learner Action | Evidence |
 | --- | --- | --- |
-| Concept | Read the mini-chapter and name the invariant. | A short explanation in the learner's own words. |
+| Concept | Read the self-contained concept chapter and name the invariant. | A short explanation in the learner's own words. |
 | Exercise | Implement the smallest current milestone. | Focused validator output. |
 | Extension | Add a failure mode, scale case, or operational concern. | A test, trace, benchmark, or design note. |
 | Review | Explain the tradeoff and remaining risk. | Staff-level review answers. |

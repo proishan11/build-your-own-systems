@@ -7,7 +7,7 @@ This chapter explains the learning loop and the level-by-level progression from 
 Each module follows the same loop:
 
 ```text
-Concept mini-chapter
+Self-contained concept chapter
 -> guided reading
 -> small exercise
 -> implementation milestone

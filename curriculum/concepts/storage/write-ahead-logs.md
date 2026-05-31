@@ -1,14 +1,25 @@
 # Write-Ahead Logs
 
-## Concept
+## What You Should Know First
 
-A write-ahead log is an append-only record of changes that reaches durable storage before the database or service relies on those changes elsewhere.
+You should know that memory disappears on process crash, files are durable only after the operating system and storage device have accepted the right writes, and complex data structures often require several updates for one logical change.
 
-## Why It Exists
+## The Problem
 
-Complex data structures are hard to update atomically. A B+ tree insert might touch several pages. A replicated log might update indexes and metadata. If the process crashes halfway through, the system needs a simple source of truth to recover from.
+A storage engine cannot usually update everything atomically. A single insert might modify a table page, an index page, a free-space map, and metadata. If the process crashes halfway through, the system needs a durable record of what it intended to do.
 
-The WAL makes recovery possible by turning scattered mutations into an ordered history.
+A write-ahead log, or WAL, solves this by recording changes in an append-only history before the system exposes or depends on those changes elsewhere.
+
+## Vocabulary
+
+| Term | Meaning |
+| --- | --- |
+| Log record | A serialized description of one operation or state change. |
+| Log sequence number | A monotonically increasing position in the log. Often abbreviated LSN. |
+| Durable boundary | The point at which the system can rely on a record surviving restart. |
+| Replay | Reading log records after restart and applying them again. |
+| Checkpoint | A point where enough state has been flushed that older log records may no longer be needed for recovery. |
+| Idempotence | The property that replaying an operation more than once does not corrupt state. |
 
 ## Mental Model
 
@@ -20,34 +31,66 @@ Think of a WAL as a numbered notebook:
 3: delete users/1
 ```
 
-On restart, the system rereads the notebook and rebuilds or repairs state.
+The in-memory index is convenient, but the notebook is the source that survives a crash. On restart, the system scans the notebook and rebuilds or repairs state.
 
 ## Core Invariant
 
-The system must not expose or depend on a change unless the log record needed to recover that change has reached the required durability boundary.
+The system must not expose or depend on a change unless the log record needed to recover that change has crossed the required durability boundary.
 
-## Tiny Example
+That boundary might be `fsync`, a group commit batch, a replicated quorum, or another explicit persistence rule. The key is that the boundary must be named and tested.
 
-If `Append("alpha")` returns index `1`, then after restart, reading index `1` should return exactly `"alpha"` or report a clear storage error. Returning different bytes is silent corruption.
+## Worked Example
 
-## Common Misconceptions
+Imagine a key-value store with `Put("x", "alpha")`.
 
-- A successful `write` syscall does not always mean data is on stable storage.
-- The in-memory index is not the source of truth.
-- WAL is not only for databases; it is also the backbone of queues, consensus logs, and event stores.
-- Recovery must be idempotent because it may replay work that partially happened before the crash.
+| Step | Correct Behavior |
+| --- | --- |
+| Serialize record | Create a record containing operation type, key, value, and checksum. |
+| Append record | Write it to the log at the next LSN. |
+| Force durability | Flush according to the API's durability promise. |
+| Update index | Point key `x` at the new value or record location. |
+| Return success | Only now tell the caller that the write succeeded. |
+
+After restart, key `x` should either recover as `"alpha"` or the append should be reported as not durable. Returning different bytes is silent corruption.
+
+## Implementation Shape
+
+A minimal WAL usually has:
+
+| Component | Responsibility |
+| --- | --- |
+| Encoder | Turns a record into bytes with length, type, payload, and checksum. |
+| Appender | Writes records sequentially and returns a stable position. |
+| Sync policy | Decides when to call `fsync` or equivalent. |
+| Scanner | Reads records in order and stops cleanly at a torn tail. |
+| Recovery loop | Replays committed records into indexes or pages. |
+
+Append-only design is powerful because it turns random mutation into sequential I/O, but the implementation still needs careful framing and recovery rules.
+
+## Failure Modes
+
+| Failure | Why It Matters |
+| --- | --- |
+| Partial tail record | A crash may leave only half of the final record. Recovery must stop safely. |
+| Missing checksum | Corruption can be mistaken for valid data. |
+| Index-first update | A crash can expose state that the log cannot recover. |
+| Non-idempotent replay | Recovery can duplicate effects after a partial crash. |
+| Ambiguous durability | Callers cannot reason about what survives restart. |
+
+## Exercise Bridge
+
+This concept powers the WAL record format, MiniDB storage engine, replicated WAL, queues, event stores, stream processors, and Raft logs. When you open an exercise, first identify the durable boundary and the replay rule.
 
 ## Self-Check
 
-1. What exactly is durable after append returns?
+1. What exactly is durable when append returns?
 2. What can be rebuilt by scanning the log?
-3. What happens if the last record is partial?
-4. What does `fsync` change?
-5. What later features require stable log indexes?
+3. What should recovery do with a partial final record?
+4. What does `fsync` change, and what does it not guarantee?
+5. Which later features require stable log indexes?
 
 ## Further Reading
 
 - ARIES recovery paper: https://cs.uwaterloo.ca/~david/cs448/aries-mohan.pdf
 - Raft paper: https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro
 - Bigtable paper: https://research.google/pubs/pub27898
-

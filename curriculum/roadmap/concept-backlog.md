@@ -1,6 +1,6 @@
 # Concept Backlog
 
-This backlog lists concept mini-chapters to add under `curriculum/concepts/`.
+This backlog lists self-contained concept chapters to add under `curriculum/concepts/`.
 
 ## Highest Priority
 

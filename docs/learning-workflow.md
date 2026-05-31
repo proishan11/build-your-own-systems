@@ -28,7 +28,7 @@ Use four passes per exercise.
 
 ### Pass 1: Learn
 
-Read the exercise and concept chapter. Write down:
+Read the exercise and the linked self-contained concept chapter. Write down:
 
 - the state owned by the component
 - the invariant

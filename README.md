@@ -109,7 +109,7 @@ tools/learn.py next --track go-concurrency
 
 The broader catalog starts at [Project Catalog](curriculum/catalog/project-catalog.md) and continues as book-style chapters under [curriculum/catalog/chapters](curriculum/catalog/chapters/).
 
-Reusable mini-chapters live in [Concept Library](curriculum/concepts/INDEX.md).
+Self-contained concept chapters live in [Concept Library](curriculum/concepts/INDEX.md).
 
 The full roadmap lives in:
 

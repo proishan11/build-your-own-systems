@@ -1,52 +1,94 @@
 # Profiling and Tail Latency
 
-## Concept
+## What You Should Know First
 
-Profiling identifies where time, CPU, memory, I/O, or contention is spent. Tail latency studies the slow requests, not just the average request.
+You should know that average latency hides individual slow requests, and that performance work needs measurement before optimization. Guessing is how teams optimize the wrong thing very efficiently.
 
-## Why It Exists
+## The Problem
 
-Users experience individual requests. A system with good average latency can still feel broken if p95 or p99 latency is bad. Staff-level performance work starts from evidence.
+Users experience individual requests, not averages. A service with a fast median can still feel broken if the slowest 1 percent of requests are very slow. Tail latency studies those high-percentile delays.
+
+Profiling explains where time, CPU, memory, locks, or I/O are spent. Together, profiling and tail-latency analysis turn performance from folklore into evidence.
+
+## Vocabulary
+
+| Term | Meaning |
+| --- | --- |
+| Median | 50th percentile latency. Half of requests are faster. |
+| p95/p99 | 95th or 99th percentile latency. Shows tail behavior. |
+| Throughput | Work completed per unit time. |
+| Profile | Sampled or instrumented view of where resources are spent. |
+| Flame graph | Visualization of stack traces and CPU time. |
+| Contention | Waiting because another actor holds a shared resource. |
+| Coordinated omission | Benchmark error that hides latency during stalls. |
 
 ## Mental Model
 
-```text
-measure -> localize bottleneck -> change one thing -> remeasure
-```
-
-For latency:
+Performance is a queueing story:
 
 ```text
-p50: typical
-p95: uncomfortable
-p99: incident-shaped
+arrival rate -> queue -> service time -> response time
 ```
+
+When utilization gets high, small increases in work can create large increases in waiting. Tail latency often comes from waiting, retries, lock contention, garbage collection, cache misses, or noisy neighbors.
 
 ## Core Invariant
 
-Every optimization should name the measured bottleneck it targets and prove the effect with comparable measurements.
+Every performance claim should name the workload, measurement method, percentile or resource metric, and comparison baseline.
 
-## Tiny Example
+"It is faster" is incomplete. Faster for which workload, by which metric, under which load?
 
-A service has average latency of 80 ms but p99 of 4 seconds. Profiling shows a global lock around cache refresh. The fix is not "use a faster language"; it is reducing contention or moving refresh off the request path.
+## Worked Example
 
-## Common Misconceptions
+A service has:
 
-- Benchmarks without workload assumptions are stories.
-- Average latency hides pain.
-- Optimizing before measuring often moves complexity, not bottlenecks.
-- CPU profiles do not explain all I/O or lock contention problems.
+| Metric | Value |
+| --- | ---: |
+| p50 | 20 ms |
+| p95 | 80 ms |
+| p99 | 900 ms |
+
+The average may look acceptable, but p99 says some users wait almost a second. A profile might show most requests are cheap, while rare cache misses trigger slow database queries.
+
+## Implementation Shape
+
+A performance lab usually includes:
+
+| Piece | Responsibility |
+| --- | --- |
+| Benchmark harness | Generates repeatable load and records timings. |
+| Percentile reporter | Shows p50, p95, p99, max, and throughput. |
+| Profiler integration | Captures CPU, memory, lock, or I/O profiles. |
+| Experiment log | Records configuration and hypothesis. |
+| Regression guard | Compares new runs with a baseline. |
+
+Good performance work changes one thing at a time. Otherwise, results are hard to explain.
+
+## Failure Modes
+
+| Failure | Consequence |
+| --- | --- |
+| Measuring only averages | Tail pain disappears from reports. |
+| Benchmarking without warmup | Startup effects distort results. |
+| Coordinated omission | Load generator hides pauses by not sending requests during stalls. |
+| Optimizing without profile | Work targets the loudest guess, not the bottleneck. |
+| Ignoring variance | One lucky run becomes a false conclusion. |
+| No production signal | Lab benchmark fails to represent real traffic. |
+
+## Exercise Bridge
+
+Performance exercises ask you to build profilers, benchmark harnesses, tail-latency reports, lock-contention labs, and observability views. Before coding, define the workload and the metric that would prove improvement.
 
 ## Self-Check
 
-1. What metric proves the system is slow?
-2. Is the bottleneck CPU, memory, I/O, lock contention, or queueing?
-3. Which percentile matters for users?
-4. What changed between benchmark runs?
+1. Why can p99 get worse while p50 stays stable?
+2. What workload are you measuring?
+3. What does the profile say is actually expensive?
+4. How would coordinated omission hide a stall?
+5. What would make a benchmark result reproducible?
 
 ## Further Reading
 
-- Brendan Gregg's systems performance resources: https://www.brendangregg.com/systems-performance-2nd-edition-book.html
-- USE method: https://www.brendangregg.com/usemethod.html
-- OpenTelemetry docs: https://opentelemetry.io/docs/
-
+- The Tail at Scale: https://research.google/pubs/pub40801/
+- Brendan Gregg, Flame Graphs: https://www.brendangregg.com/flamegraphs.html
+- Gil Tene, How NOT to Measure Latency: https://www.youtube.com/watch?v=lJ8ydIuPFeU

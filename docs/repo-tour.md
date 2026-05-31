@@ -32,7 +32,7 @@ Important files:
 - `curriculum/curriculum.json`: machine-readable manifest used by `tools/learn.py`.
 - `curriculum/catalog/project-catalog.md`: book-style index for the project catalog.
 - `curriculum/catalog/chapters/`: catalog chapters across systems, databases, distributed systems, AI, tooling, security, performance, and operations.
-- `curriculum/concepts/`: reusable concept chapters.
+- `curriculum/concepts/`: self-contained concept chapters that teach the idea before implementation.
 - `curriculum/projects/`: deeper project descriptions for major tracks.
 - `curriculum/roadmap/`: planning indexes, roadmap chapters, implementation status, and scaffolding sequence.
 - `curriculum/rubrics/staff-engineer-review.md`: review criteria.

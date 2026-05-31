@@ -70,6 +70,12 @@ If that local validator is unavailable, at minimum inspect `skills/interactive-l
 
 Use [curriculum/templates/exercise-template.md](curriculum/templates/exercise-template.md) as the base structure.
 
+## Concept Chapter Standard
+
+Concept chapters should be self-contained teaching material, not short project blurbs. A learner should be able to read the chapter before opening the exercise and understand the vocabulary, mental model, invariant, worked example, implementation shape, and common failure modes.
+
+Use [curriculum/concepts/INDEX.md](curriculum/concepts/INDEX.md) as the source of truth for the required chapter shape.
+
 ## Adding A Project Ladder
 
 Project ladders should be real implementation work, not just project ideas.

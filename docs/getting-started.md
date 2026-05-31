@@ -1,6 +1,6 @@
 # Getting Started
 
-This repository is a curriculum-as-code playground. You learn by reading a short concept lesson, implementing missing code, running validators, and asking an AI coach for hints or review.
+This repository is a curriculum-as-code playground. You learn by reading a self-contained concept chapter, implementing missing code, running validators, and asking an AI coach for hints or review.
 
 The curriculum is intentionally scaffolded. Most tests fail at first because the implementation is yours to write.
 
