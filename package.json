@@ -1,0 +1,49 @@
+{
+  "name": "build-your-own-systems-skill",
+  "version": "0.1.0",
+  "description": "Installer for the Build Your Own Systems interactive-learning-coach skill for Codex, Claude Code, Cursor, Windsurf, and generic coding agents.",
+  "license": "MIT",
+  "private": false,
+  "homepage": "https://github.com/proishan/build-your-own-systems#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/proishan/build-your-own-systems.git"
+  },
+  "bugs": {
+    "url": "https://github.com/proishan/build-your-own-systems/issues"
+  },
+  "keywords": [
+    "ai-skill",
+    "codex",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "systems",
+    "distributed-systems",
+    "databases",
+    "rag",
+    "agents",
+    "kubernetes",
+    "curriculum",
+    "learning",
+    "coding-exercises",
+    "staff-engineering"
+  ],
+  "bin": {
+    "build-your-own-systems-skill": "bin/install-build-your-own-systems-skill.js",
+    "byos-skill": "bin/install-build-your-own-systems-skill.js"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "bin/",
+    "docs/npm-package.md",
+    "docs/portable-skill-install.md",
+    "docs/using-the-ai-coach.md",
+    "skills/",
+    "adapters/"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

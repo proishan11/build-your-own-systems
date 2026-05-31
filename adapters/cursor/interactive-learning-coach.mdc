@@ -1,0 +1,17 @@
+---
+description: Use the portable interactive-learning-coach skill for scaffolded CS/systems learning tasks, hints, validation, and Staff-level implementation review.
+globs:
+alwaysApply: false
+---
+
+Use the portable skill at `skills/interactive-learning-coach/SKILL.md`.
+
+When the user asks to learn a concept, get the next exercise, receive hints, understand an implementation approach, validate work, review code, or expand the curriculum, read that skill file first, then load only the relevant files under `skills/interactive-learning-coach/references/`.
+
+Preserve the skill's learning posture:
+
+- Teach the concept before implementation unless the user skips it.
+- Prefer layered hints over full solutions.
+- Explain approaches in natural language before code.
+- Validate with local tests when possible.
+- Review implementations through correctness, failure modes, concurrency, durability, observability, and test coverage.
