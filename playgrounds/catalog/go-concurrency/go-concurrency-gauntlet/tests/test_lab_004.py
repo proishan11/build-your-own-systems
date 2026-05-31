@@ -1,23 +1,17 @@
 import unittest
 
-from lab_004 import RetryPolicy
+from lab_004 import recover_go_concurrency_gauntlet_blocked_sender
 
 
-class RetryPolicyTest(unittest.TestCase):
-    def test_retryable_errors_retry_until_budget_is_exhausted(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout", "unavailable"})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 1})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 2})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "give_up", "attempt": 3})
+class RecoveryTest(unittest.TestCase):
+    def test_retries_transient_fan_out_work_failure(self):
+        self.assertEqual(recover_go_concurrency_gauntlet_blocked_sender({'operation': 'fan out work', 'error': 'timeout', 'attempt': 1, 'max_attempts': 3, 'resource': 'worker group'}), {'decision': 'retry', 'next_attempt': 2, 'resource': 'worker group'})
 
-    def test_non_retryable_error_fails_immediately(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_failure("op2", "permission_denied"), {"decision": "fail", "attempt": 1})
+    def test_fails_permanent_blocked_sender(self):
+        self.assertEqual(recover_go_concurrency_gauntlet_blocked_sender({'operation': 'fan out work', 'error': 'blocked sender', 'attempt': 1, 'max_attempts': 3, 'resource': 'worker group'}), {'decision': 'fail', 'reason': 'blocked sender', 'resource': 'worker group'})
 
-    def test_success_is_sticky(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_success("op3"), {"decision": "success", "attempt": 0})
-        self.assertEqual(policy.record_failure("op3", "timeout"), {"decision": "success", "attempt": 0})
+    def test_gives_up_when_retry_budget_is_exhausted(self):
+        self.assertEqual(recover_go_concurrency_gauntlet_blocked_sender({'operation': 'fan out work', 'error': 'timeout', 'attempt': 3, 'max_attempts': 3, 'resource': 'worker group'}), {'decision': 'give_up', 'reason': 'retry budget exhausted', 'resource': 'worker group'})
 
 
 if __name__ == "__main__":

@@ -1,23 +1,11 @@
-"""Learner implementation stub for Go Concurrency Gauntlet First Implementation Lab.
+"""Learner implementation stub for Go Concurrency Gauntlet: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `fan_out_work_concurrent_job`.
 """
 
-class DuplicateResource(Exception): pass
-class ResourceStore:
-    def __init__(self): pass
-    def create(self, resource_id: str, state: str):
-        # TODO
-        raise NotImplementedError
-    def transition(self, resource_id: str, state: str):
-        # TODO
-        raise NotImplementedError
-    def get(self, resource_id: str) -> str:
-        # TODO
-        raise NotImplementedError
-    def audit(self) -> list[tuple[str,str]]:
-        # TODO
-        raise NotImplementedError
+def fan_out_work_concurrent_job(request: dict) -> dict:
+    """Validate and build the core operation for a concurrent job request before it mutates worker group."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

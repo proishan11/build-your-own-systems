@@ -1,11 +1,11 @@
-"""Learner implementation stub for MapReduce Runtime First Implementation Lab.
+"""Learner implementation stub for MapReduce Runtime: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `schedule_task_map_task`.
 """
 
-def partition(records, mapper, reducers: int) -> list[list[tuple[str, int]]]:
-    # TODO: Run mapper(record)->iterable[(key,value)] and bucket by hash(key)%reducers.
+def schedule_task_map_task(request: dict) -> dict:
+    """Validate and build the core operation for a map task request before it mutates task tracker."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

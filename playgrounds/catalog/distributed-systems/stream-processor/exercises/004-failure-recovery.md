@@ -1,57 +1,57 @@
-# Exercise 004: Stream Processor Failure, Retry, and Recovery Boundary
+# Exercise 004: Stream Processor Failure and Recovery
 
 Shared concept chapter: [raft-and-replicated-logs.md](../../../../../curriculum/concepts/distributed-systems/raft-and-replicated-logs.md)
 
 ## Concept Primer
 
-This exercise deepens **Stream Processor** by adding the next implementation boundary after the starter lab. The focus is not broad feature count; it is building one mechanism that later project milestones can trust.
+This exercise is a project-specific implementation milestone for **Stream Processor**. The work is centered on `recover_stream_processor_late_event`, not on a generic scaffold. You will implement behavior for **stream event** moving through **watermark state** while preserving the project invariant.
 
-The implementation target is: Implement a retry boundary that distinguishes retryable failures, permanent failures, exhausted budgets, and completed operations.
+The implementation target is: Implement `recover_stream_processor_late_event` so Stream Processor handles transient failures, permanent `late event` cases, and exhausted retry budgets explicitly.
 
 ## Why This Matters
 
-A serious systems project becomes understandable when each layer has a contract. This exercise asks you to encode that contract in code and tests before adding more moving parts. That habit is what lets Staff engineers change complex systems without guessing.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Stream Processor and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-A distributed component is a promise made across unreliable machines. Local state may change only when the protocol evidence says the change remains safe after retry, delay, or partial failure.
+Think of this component as a gate around **watermark state**. A **stream event** arrives, the component decides whether `advance watermark` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this milestone, draw the component as three boxes: input, owned state, and observable output. Correct code validates the input, mutates only owned state, and returns an output that explains what happened.
+The local state should be boring and inspectable. If you cannot explain how `late event` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-The component must preserve this contract after every operation: retry only configured retryable errors while attempts remain, fail immediately for non-retryable errors, stop retrying once the operation exhausts its attempt budget. A later milestone may add scale or distribution, but it must not weaken this invariant.
+Recovery decisions for watermark state must never turn a permanent late event into an unsafe retry.
 
 ## Tiny Example
 
-Take one normal operation and one boundary operation from `tests/test_lab_004.py`. Before coding, write the expected state transition by hand. If the expected transition is hard to state in one sentence, simplify the internal representation first.
+A timeout on attempt 1 retries at attempt 2. The domain-specific failure fails immediately. A timeout at the max attempt gives up.
 
 ## Common Misconceptions
 
-- Passing the first happy-path assertion means the component is finished.
-- Internal state can be exposed directly because this is only a learning scaffold.
-- A retry, replay, duplicate, or malformed input can be handled later without shaping the API now.
-- Do not treat a retry as a new operation; identity and idempotency are part of correctness.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this exercise introduce that exercise 001 did not need?
-2. Which branch protects the invariant before mutation?
-3. What behavior must remain deterministic for review and debugging?
-4. What would you measure or log when this component misbehaves?
+1. What state does `recover_stream_processor_late_event` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `late event` happened in production?
 
 ## Goal
 
-Implement a retry boundary that distinguishes retryable failures, permanent failures, exhausted budgets, and completed operations.
+Implement `recover_stream_processor_late_event` so Stream Processor handles transient failures, permanent `late event` cases, and exhausted retry budgets explicitly.
 
 ## Concepts
 
-- replicated state
+- replication
 - quorums
 - idempotency
-- fault boundaries
+- partial failure
 
 ## Files To Edit
 
@@ -61,31 +61,30 @@ Implement a retry boundary that distinguishes retryable failures, permanent fail
 
 Your implementation must:
 
-- retry only configured retryable errors while attempts remain
-- fail immediately for non-retryable errors
-- stop retrying once the operation exhausts its attempt budget
-- make success sticky so later duplicate failure reports do not resurrect completed work
+- retry transient timeout or unavailable errors while attempts remain
+- fail permanent `late event` reports immediately
+- give up when retry budget is exhausted
+- include resource and reason fields for operators
 
 ## Design Hints
 
-- Keep the representation boring and explicit; clever encodings hide invariants.
-- Implement validation and idempotency before optimizing the successful path.
-- Prefer deterministic ordering for every returned list, report, or plan.
-- Make boundary behavior visible in the return value or exception type.
+- Classify permanent domain failures before retryable infrastructure failures.
+- Compare `attempt` to `max_attempts` before returning retry.
+- Return structured decisions; strings alone are too hard to operate.
 
 ## Layered Hints
 
 ### Hint 1
 
-Start with the data structure that makes the invariant obvious. Most of the code should become simple conditionals over that structure.
+Start with the expected dictionaries in `test_lab_004.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Run the test file directly and implement one assertion at a time. Do not start by trying to satisfy every scenario at once.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the tests pass, look for accidental mutation leaks: returned dictionaries and lists should not let callers corrupt internal state.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
@@ -98,12 +97,11 @@ python3 -m unittest discover -s tests -p test_lab_004.py
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Raft and replicated logs: ../../../../../curriculum/concepts/distributed-systems/raft-and-replicated-logs.md
 - Raft paper: https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro
 
 ## Staff-Level Review Questions
 
-1. What invariant did this milestone add or strengthen?
-2. Which malformed, duplicate, stale, or partial input should be tested next?
-3. How would this implementation behave under replay or retry?
-4. What would make this component easier to debug in production?
+1. What makes this implementation specific to Stream Processor, rather than a generic CRUD helper?
+2. Which failure mode does `late event` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

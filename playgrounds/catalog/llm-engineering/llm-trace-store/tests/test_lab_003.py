@@ -1,31 +1,21 @@
 import unittest
 
-from lab_003 import plan_actions, summarize_plan
+from lab_003 import plan_llm_trace_store_record_spans
 
 
-class OperationPlannerTest(unittest.TestCase):
-    def test_plans_create_update_and_delete_in_key_order(self):
-        desired = {"api": 2, "worker": 1}
-        observed = {"api": 1, "old": 1}
+class PlanningTest(unittest.TestCase):
+    def test_plans_deterministic_record_span_operations(self):
+        self.assertEqual(plan_llm_trace_store_record_spans({'trace-index-primary': 'ready', 'trace-index-canary': 'ready'}, {'trace-index-primary': 'stale', 'trace-index-old': 'ready'}), [{'op': 'update', 'name': 'trace-index-primary', 'from': 'stale', 'to': 'ready'}, {'op': 'delete', 'name': 'trace-index-old', 'from': 'ready'}, {'op': 'create', 'name': 'trace-index-canary', 'to': 'ready'}])
+
+    def test_noops_when_trace_index_already_matches(self):
+        current = {'trace-index-primary': 'ready'}
+        self.assertEqual(plan_llm_trace_store_record_spans(current, dict(current)), [])
+
+    def test_create_actions_are_sorted_by_name(self):
         self.assertEqual(
-            plan_actions(desired, observed),
-            [
-                {"action": "update", "key": "api", "old": 1, "value": 2},
-                {"action": "delete", "key": "old", "old": 1},
-                {"action": "create", "key": "worker", "value": 1},
-            ],
+            plan_llm_trace_store_record_spans({'b': 'ready', 'a': 'ready'}, {}),
+            [{'op': 'create', 'name': 'a', 'to': 'ready'}, {'op': 'create', 'name': 'b', 'to': 'ready'}],
         )
-
-    def test_equal_state_has_no_actions(self):
-        self.assertEqual(plan_actions({"api": 1}, {"api": 1}), [])
-
-    def test_summarizes_plan(self):
-        actions = [
-            {"action": "create", "key": "a"},
-            {"action": "update", "key": "b"},
-            {"action": "update", "key": "c"},
-        ]
-        self.assertEqual(summarize_plan(actions), {"create": 1, "update": 2, "delete": 0, "total": 3})
 
 
 if __name__ == "__main__":

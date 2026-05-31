@@ -1,7 +1,21 @@
 import unittest
-from lab import RestoreError, plan_restore
-class RestoreTest(unittest.TestCase):
-    def test_plan(self): self.assertEqual(plan_restore([10,20], [(20,30),(30,40)], 35)['backup'],20)
-    def test_reject_too_early(self):
-        with self.assertRaises(RestoreError): plan_restore([10], [], 5)
-if __name__ == '__main__': unittest.main()
+
+from lab import restore_target_wal_segment
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_wal_segment_request(self):
+        self.assertEqual(restore_target_wal_segment({'id': 'wal-segment-001', 'kind': 'restore target', 'target': 'backup catalog', 'priority': 2, 'metadata': {'source': 'Backup and PITR Lab', 'track': 'postgres-administration'}}), {'id': 'wal-segment-001', 'action': 'restore target', 'target': 'backup catalog', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_wal_segment_request(self):
+        self.assertEqual(restore_target_wal_segment({'id': 'bad', 'kind': '', 'target': 'backup catalog', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'backup catalog', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'wal-segment-001', 'kind': 'restore target', 'target': 'backup catalog', 'priority': 2, 'metadata': {'source': 'Backup and PITR Lab', 'track': 'postgres-administration'}}
+        original = dict(request)
+        restore_target_wal_segment(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

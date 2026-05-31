@@ -1,23 +1,17 @@
 import unittest
 
-from lab_004 import RetryPolicy
+from lab_004 import recover_minidb_storage_engine_dirty_page_loss
 
 
-class RetryPolicyTest(unittest.TestCase):
-    def test_retryable_errors_retry_until_budget_is_exhausted(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout", "unavailable"})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 1})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 2})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "give_up", "attempt": 3})
+class RecoveryTest(unittest.TestCase):
+    def test_retries_transient_write_record_failure(self):
+        self.assertEqual(recover_minidb_storage_engine_dirty_page_loss({'operation': 'write record', 'error': 'timeout', 'attempt': 1, 'max_attempts': 3, 'resource': 'page cache'}), {'decision': 'retry', 'next_attempt': 2, 'resource': 'page cache'})
 
-    def test_non_retryable_error_fails_immediately(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_failure("op2", "permission_denied"), {"decision": "fail", "attempt": 1})
+    def test_fails_permanent_dirty_page_loss(self):
+        self.assertEqual(recover_minidb_storage_engine_dirty_page_loss({'operation': 'write record', 'error': 'dirty page loss', 'attempt': 1, 'max_attempts': 3, 'resource': 'page cache'}), {'decision': 'fail', 'reason': 'dirty page loss', 'resource': 'page cache'})
 
-    def test_success_is_sticky(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_success("op3"), {"decision": "success", "attempt": 0})
-        self.assertEqual(policy.record_failure("op3", "timeout"), {"decision": "success", "attempt": 0})
+    def test_gives_up_when_retry_budget_is_exhausted(self):
+        self.assertEqual(recover_minidb_storage_engine_dirty_page_loss({'operation': 'write record', 'error': 'timeout', 'attempt': 3, 'max_attempts': 3, 'resource': 'page cache'}), {'decision': 'give_up', 'reason': 'retry budget exhausted', 'resource': 'page cache'})
 
 
 if __name__ == "__main__":

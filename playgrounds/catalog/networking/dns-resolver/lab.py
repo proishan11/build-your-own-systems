@@ -1,15 +1,11 @@
-"""Learner implementation stub for DNS Resolver First Implementation Lab.
+"""Learner implementation stub for DNS Resolver: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `resolve_record_dns_question`.
 """
 
-class DNSError(Exception): pass
-def encode_name(name: str) -> bytes:
-    # TODO: Encode www.example.com as length-prefixed labels.
-    raise NotImplementedError
-def decode_name(data: bytes, offset: int = 0) -> tuple[str, int]:
-    # TODO: Decode one uncompressed DNS name and return name,next_offset.
+def resolve_record_dns_question(request: dict) -> dict:
+    """Validate and build the core operation for a dns question request before it mutates resolver cache."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

@@ -1,57 +1,57 @@
-# Exercise 002: Supply-Chain Scanner State Model and Invariants
+# Exercise 002: Supply-Chain Scanner State and Invariants
 
 Shared concept chapter: [threat-modeling.md](../../../../../curriculum/concepts/security/threat-modeling.md)
 
 ## Concept Primer
 
-This exercise deepens **Supply-Chain Scanner** by adding the next implementation boundary after the starter lab. The focus is not broad feature count; it is building one mechanism that later project milestones can trust.
+This exercise is a project-specific implementation milestone for **Supply-Chain Scanner**. The work is centered on `apply_supply_chain_scanner_package_artifact_event`, not on a generic scaffold. You will implement behavior for **package artifact** moving through **sbom index** while preserving the project invariant.
 
-The implementation target is: Implement the explicit state model that future project features mutate through validated events.
+The implementation target is: Implement `apply_supply_chain_scanner_package_artifact_event` so Supply-Chain Scanner can replay package artifact events into sbom index without duplicating or accepting stale state.
 
 ## Why This Matters
 
-A serious systems project becomes understandable when each layer has a contract. This exercise asks you to encode that contract in code and tests before adding more moving parts. That habit is what lets Staff engineers change complex systems without guessing.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Supply-Chain Scanner and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-Security code decides what is allowed, denied, logged, and escalated. The decision must be explainable because future incidents will ask why the system trusted something.
+Think of this component as a gate around **sbom index**. A **package artifact** arrives, the component decides whether `scan artifact` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this milestone, draw the component as three boxes: input, owned state, and observable output. Correct code validates the input, mutates only owned state, and returns an output that explains what happened.
+The local state should be boring and inspectable. If you cannot explain how `unsigned dependency` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-The component must preserve this contract after every operation: apply events only when their version is newer than the current key version, ignore duplicate event IDs without duplicating audit entries, reject stale events with a clear exception. A later milestone may add scale or distribution, but it must not weaken this invariant.
+sbom index must advance monotonically by version, and duplicate package artifact events must be idempotent.
 
 ## Tiny Example
 
-Take one normal operation and one boundary operation from `tests/test_lab_002.py`. Before coding, write the expected state transition by hand. If the expected transition is hard to state in one sentence, simplify the internal representation first.
+Events `e1`, duplicate `e1`, then `e2` should accept only `e1` and `e2`. A later event with a lower version is rejected.
 
 ## Common Misconceptions
 
-- Passing the first happy-path assertion means the component is finished.
-- Internal state can be exposed directly because this is only a learning scaffold.
-- A retry, replay, duplicate, or malformed input can be handled later without shaping the API now.
-- Do not allow unknown actions just because known dangerous actions are denied.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this exercise introduce that exercise 001 did not need?
-2. Which branch protects the invariant before mutation?
-3. What behavior must remain deterministic for review and debugging?
-4. What would you measure or log when this component misbehaves?
+1. What state does `apply_supply_chain_scanner_package_artifact_event` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `unsigned dependency` happened in production?
 
 ## Goal
 
-Implement the explicit state model that future project features mutate through validated events.
+Implement `apply_supply_chain_scanner_package_artifact_event` so Supply-Chain Scanner can replay package artifact events into sbom index without duplicating or accepting stale state.
 
 ## Concepts
 
-- threat modeling
 - least privilege
 - auditability
-- supply-chain trust
+- trust boundaries
+- abuse cases
 
 ## Files To Edit
 
@@ -61,31 +61,30 @@ Implement the explicit state model that future project features mutate through v
 
 Your implementation must:
 
-- apply events only when their version is newer than the current key version
-- ignore duplicate event IDs without duplicating audit entries
-- reject stale events with a clear exception
-- return immutable snapshots for reads and audits
+- apply events in order
+- ignore duplicate event ids
+- reject stale versions
+- return accepted and rejected event ids
 
 ## Design Hints
 
-- Keep the representation boring and explicit; clever encodings hide invariants.
-- Implement validation and idempotency before optimizing the successful path.
-- Prefer deterministic ordering for every returned list, report, or plan.
-- Make boundary behavior visible in the return value or exception type.
+- Use a set for event ids and an integer for current version.
+- Check duplicate and stale cases before updating state.
+- Make the empty stream result explicit; future recovery code depends on it.
 
 ## Layered Hints
 
 ### Hint 1
 
-Start with the data structure that makes the invariant obvious. Most of the code should become simple conditionals over that structure.
+Start with the expected dictionaries in `test_lab_002.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Run the test file directly and implement one assertion at a time. Do not start by trying to satisfy every scenario at once.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the tests pass, look for accidental mutation leaks: returned dictionaries and lists should not let callers corrupt internal state.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
@@ -98,12 +97,11 @@ python3 -m unittest discover -s tests -p test_lab_002.py
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Threat modeling: ../../../../../curriculum/concepts/security/threat-modeling.md
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
 
 ## Staff-Level Review Questions
 
-1. What invariant did this milestone add or strengthen?
-2. Which malformed, duplicate, stale, or partial input should be tested next?
-3. How would this implementation behave under replay or retry?
-4. What would make this component easier to debug in production?
+1. What makes this implementation specific to Supply-Chain Scanner, rather than a generic CRUD helper?
+2. Which failure mode does `unsigned dependency` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

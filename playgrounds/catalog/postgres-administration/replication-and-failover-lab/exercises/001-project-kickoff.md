@@ -1,53 +1,54 @@
-# Exercise 001: Replication and Failover Lab First Implementation Lab
+# Exercise 001: Replication and Failover Lab Core Mechanism
 
 Shared concept chapter: [postgres-admin-mental-model.md](../../../../../curriculum/concepts/postgres/postgres-admin-mental-model.md)
 
 ## Concept Primer
 
-This first lab turns **Replication and Failover Lab** from a broad project idea into a concrete implementation problem. You are building one narrow mechanism, but you should treat it like production code: name the invariant, make the state explicit, and let the tests describe externally visible behavior.
+This exercise is a project-specific implementation milestone for **Replication and Failover Lab**. The work is centered on `promote_replica_replica_status`, not on a generic scaffold. You will implement behavior for **replica status** moving through **failover plan** while preserving the project invariant.
 
-The implementation target is: Choose a promotion candidate based on replication lag and health.
+The implementation target is: Implement `promote_replica_replica_status` so Replication and Failover Lab has a concrete implementation boundary for replica status requests before they touch failover plan.
 
 ## Why This Matters
 
-Large systems become learnable when you can isolate a small correctness boundary. A Staff-level engineer does not begin by wiring together a giant demo. They find the smallest behavior that protects the future design, implement it cleanly, and use tests to keep later changes honest.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Replication and Failover Lab and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-Postgres administration is applied invariants: data must be recoverable, query behavior must be explainable, and failover must preserve the chosen consistency contract.
+Think of this component as a gate around **failover plan**. A **replica status** arrives, the component decides whether `promote replica` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this lab, trace one input through the component: what state is read, what decision is made, what state changes, and what result becomes visible to the caller.
+The local state should be boring and inspectable. If you cannot explain how `split brain` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-After each public operation, the component must preserve this contract: ignore unhealthy replicas; choose lowest lag; reject when lag exceeds threshold. If a later feature makes this invariant harder to maintain, the design should expose that tension instead of hiding it in incidental code.
+Only valid replica status requests may become promote replica operations against failover plan; malformed input must produce a deterministic rejection.
 
 ## Tiny Example
 
-Start with the smallest state the tests can exercise. Apply one valid operation and inspect the returned value or stored state. Then apply one boundary operation: a mismatch, duplicate, missing value, limit crossing, malformed input, or unsupported action. The second case is where the invariant usually becomes clear.
+A valid request with id `replica-status-001`, kind `promote replica`, and target `failover plan` becomes a concrete operation. A request with an empty kind is rejected before it can mutate state.
 
 ## Common Misconceptions
 
-- A backup is valid because the command exited zero.
-- Index recommendations can ignore write cost.
-- Replication lag is only a performance metric.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this component own, and what state is merely input?
-2. What is the one condition that must be checked before mutation?
-3. What should happen for the boundary case in the tests?
-4. What information would you log or expose if this failed in production?
+1. What state does `promote_replica_replica_status` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `split brain` happened in production?
 
 ## Goal
 
-Choose a promotion candidate based on replication lag and health.
+Implement `promote_replica_replica_status` so Replication and Failover Lab has a concrete implementation boundary for replica status requests before they touch failover plan.
 
 ## Concepts
 
-- backup safety
+- recovery evidence
 - query plans
 - replication state
 - operational runbooks
@@ -60,49 +61,47 @@ Choose a promotion candidate based on replication lag and health.
 
 Your implementation must:
 
-- ignore unhealthy replicas
-- choose lowest lag
-- reject when lag exceeds threshold
-- return reason for choice
+- build valid replica status requests into a stable project operation
+- preserve id, target, and priority
+- reject malformed requests with a stable reason
+- avoid mutating caller-owned input
 
 ## Design Hints
 
-- Name the evidence that proves the operational claim.
-- Separate recommendation from verification.
-- Test the scenario where the obvious action is unsafe.
-- Keep the implementation small enough that each test maps to a named behavior, not a side effect.
+- Name the validation checks before building the output dictionary.
+- Treat `split brain` as the kind of bad input that must never reach mutation code.
+- Return plain dictionaries so the tests can inspect the domain decision directly.
 
 ## Layered Hints
 
 ### Hint 1
 
-Write down the state shape first. Most of these labs become straightforward once the data structure reflects the invariant.
+Start with the expected dictionaries in `test_lab.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Implement the validation branch before the mutation branch. Rejecting or no-op behavior is often where correctness gets lost.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the first passing implementation, reread the tests and remove any accidental coupling to test literals. The code should satisfy the contract, not memorize the examples.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
 Run from `playgrounds/catalog/postgres-administration/replication-and-failover-lab`:
 
 ```bash
-python3 -m unittest discover -s tests -p test_lab.py -p test_lab.py
+python3 -m unittest discover -s tests -p test_lab.py
 ```
 
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Postgres admin mental model: ../../../../../curriculum/concepts/postgres/postgres-admin-mental-model.md
-- PostgreSQL backup and restore: https://www.postgresql.org/docs/current/backup.html
+- PostgreSQL backup docs: https://www.postgresql.org/docs/current/backup.html
 
 ## Staff-Level Review Questions
 
-1. What invariant does this first component protect?
-2. What edge case would become a production incident later?
-3. What should the next exercise add after this passes?
-4. What metric, trace, or audit event would make failures visible?
+1. What makes this implementation specific to Replication and Failover Lab, rather than a generic CRUD helper?
+2. Which failure mode does `split brain` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

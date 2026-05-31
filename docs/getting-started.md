@@ -18,7 +18,7 @@ Useful as you enter specific tracks:
 - Rust, for Rust interpreter/runtime extensions when you add or expand those tracks.
 - Git, for repo workflows and the Git object-model exercises.
 
-Most catalog exercises use Python-only stubs so you can start immediately.
+Most project ladder exercises use Python-only stubs so you can start immediately.
 
 ## First Five Minutes
 
@@ -60,7 +60,7 @@ If you want the most coherent path through the curriculum, start here:
 2. Database Systems Staff Lab: WAL records, slotted pages, buffer pools, B+ tree insertions.
 3. Distributed Systems Staff Lab: durable logs and replicated-log reasoning.
 4. Networking From Scratch: reliable receiver and IP routing.
-5. Catalog ladders: choose a domain such as RAG, Kubernetes controllers, PostgreSQL operations, security, or performance.
+5. Project ladders: choose a domain such as RAG, Kubernetes controllers, PostgreSQL operations, security, or performance.
 
 Use:
 
@@ -71,12 +71,11 @@ tools/learn.py next --track go-concurrency
 
 ## Understanding The Course Size
 
-The curriculum currently has 365 runnable scaffold exercises:
+The curriculum currently has 365 runnable, project-specific scaffolded implementation exercises.
 
-- 15 detailed first-wave exercises.
-- 350 catalog exercises across 70 five-exercise project ladders.
+They are organized as 15 foundation exercises plus 350 project ladder exercises across 70 five-exercise project ladders.
 
-Each catalog ladder has the same shape:
+Each project ladder has the same shape:
 
 1. Core mechanism and first invariant.
 2. State model and invariants.

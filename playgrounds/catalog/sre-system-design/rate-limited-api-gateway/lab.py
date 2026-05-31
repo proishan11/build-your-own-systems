@@ -1,13 +1,11 @@
-"""Learner implementation stub for Rate-Limited API Gateway First Implementation Lab.
+"""Learner implementation stub for Rate-Limited API Gateway: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `allow_request_api_request`.
 """
 
-class RateLimiter:
-    def __init__(self, limit: int, window: int): pass
-    def allow(self, tenant: str, timestamp: int) -> bool:
-        # TODO
-        raise NotImplementedError
+def allow_request_api_request(request: dict) -> dict:
+    """Validate and build the core operation for a api request before it mutates token bucket."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

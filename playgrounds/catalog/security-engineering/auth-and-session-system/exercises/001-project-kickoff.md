@@ -1,56 +1,57 @@
-# Exercise 001: Auth and Session System First Implementation Lab
+# Exercise 001: Auth and Session System Core Mechanism
 
 Shared concept chapter: [threat-modeling.md](../../../../../curriculum/concepts/security/threat-modeling.md)
 
 ## Concept Primer
 
-This first lab turns **Auth and Session System** from a broad project idea into a concrete implementation problem. You are building one narrow mechanism, but you should treat it like production code: name the invariant, make the state explicit, and let the tests describe externally visible behavior.
+This exercise is a project-specific implementation milestone for **Auth and Session System**. The work is centered on `authenticate_session_session_token`, not on a generic scaffold. You will implement behavior for **session token** moving through **session store** while preserving the project invariant.
 
-The implementation target is: Implement sessions with rotation on privilege change.
+The implementation target is: Implement `authenticate_session_session_token` so Auth and Session System has a concrete implementation boundary for session token requests before they touch session store.
 
 ## Why This Matters
 
-Large systems become learnable when you can isolate a small correctness boundary. A Staff-level engineer does not begin by wiring together a giant demo. They find the smallest behavior that protects the future design, implement it cleanly, and use tests to keep later changes honest.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Auth and Session System and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-Security code decides what is allowed, denied, logged, and escalated. The decision must be explainable because future incidents will ask why the system trusted something.
+Think of this component as a gate around **session store**. A **session token** arrives, the component decides whether `authenticate session` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this lab, trace one input through the component: what state is read, what decision is made, what state changes, and what result becomes visible to the caller.
+The local state should be boring and inspectable. If you cannot explain how `session fixation` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-After each public operation, the component must preserve this contract: create session IDs; look up session users; rotate session ID. If a later feature makes this invariant harder to maintain, the design should expose that tension instead of hiding it in incidental code.
+Only valid session token requests may become authenticate session operations against session store; malformed input must produce a deterministic rejection.
 
 ## Tiny Example
 
-Start with the smallest state the tests can exercise. Apply one valid operation and inspect the returned value or stored state. Then apply one boundary operation: a mismatch, duplicate, missing value, limit crossing, malformed input, or unsupported action. The second case is where the invariant usually becomes clear.
+A valid request with id `session-token-001`, kind `authenticate session`, and target `session store` becomes a concrete operation. A request with an empty kind is rejected before it can mutate state.
 
 ## Common Misconceptions
 
-- Deny lists are complete by default.
-- A secret is safe because it is not printed.
-- Approval flows are useful without audit trails.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this component own, and what state is merely input?
-2. What is the one condition that must be checked before mutation?
-3. What should happen for the boundary case in the tests?
-4. What information would you log or expose if this failed in production?
+1. What state does `authenticate_session_session_token` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `session fixation` happened in production?
 
 ## Goal
 
-Implement sessions with rotation on privilege change.
+Implement `authenticate_session_session_token` so Auth and Session System has a concrete implementation boundary for session token requests before they touch session store.
 
 ## Concepts
 
-- threat modeling
 - least privilege
 - auditability
-- supply-chain trust
+- trust boundaries
+- abuse cases
 
 ## Files To Edit
 
@@ -60,49 +61,47 @@ Implement sessions with rotation on privilege change.
 
 Your implementation must:
 
-- create session IDs
-- look up session users
-- rotate session ID
-- invalidate old session after rotation
+- build valid session token requests into a stable project operation
+- preserve id, target, and priority
+- reject malformed requests with a stable reason
+- avoid mutating caller-owned input
 
 ## Design Hints
 
-- Start from assets, actors, and actions.
-- Make the safe default explicit.
-- Return a reason with every allow, deny, or approval decision.
-- Keep the implementation small enough that each test maps to a named behavior, not a side effect.
+- Name the validation checks before building the output dictionary.
+- Treat `session fixation` as the kind of bad input that must never reach mutation code.
+- Return plain dictionaries so the tests can inspect the domain decision directly.
 
 ## Layered Hints
 
 ### Hint 1
 
-Write down the state shape first. Most of these labs become straightforward once the data structure reflects the invariant.
+Start with the expected dictionaries in `test_lab.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Implement the validation branch before the mutation branch. Rejecting or no-op behavior is often where correctness gets lost.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the first passing implementation, reread the tests and remove any accidental coupling to test literals. The code should satisfy the contract, not memorize the examples.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
 Run from `playgrounds/catalog/security-engineering/auth-and-session-system`:
 
 ```bash
-python3 -m unittest discover -s tests -p test_lab.py -p test_lab.py
+python3 -m unittest discover -s tests -p test_lab.py
 ```
 
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Threat modeling: ../../../../../curriculum/concepts/security/threat-modeling.md
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
 
 ## Staff-Level Review Questions
 
-1. What invariant does this first component protect?
-2. What edge case would become a production incident later?
-3. What should the next exercise add after this passes?
-4. What metric, trace, or audit event would make failures visible?
+1. What makes this implementation specific to Auth and Session System, rather than a generic CRUD helper?
+2. Which failure mode does `session fixation` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

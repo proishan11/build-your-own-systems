@@ -1,7 +1,21 @@
 import unittest
-from lab import summarize
-class CostTest(unittest.TestCase):
-    def test_summary(self):
-        s=summarize([{'route':'a','cost':0.1,'kind':'model','latency_ms':10},{'route':'a','cost':0.2,'kind':'tool','latency_ms':50}])
-        self.assertEqual(s['route_costs'], {'a':0.3}); self.assertEqual(s['request_count'],2); self.assertEqual(s['tool_p95_ms'],50)
-if __name__ == '__main__': unittest.main()
+
+from lab import aggregate_sample_usage_sample
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_usage_sample_request(self):
+        self.assertEqual(aggregate_sample_usage_sample({'id': 'usage-sample-001', 'kind': 'aggregate sample', 'target': 'metric bucket', 'priority': 2, 'metadata': {'source': 'Cost and Latency Dashboard', 'track': 'llm-engineering'}}), {'id': 'usage-sample-001', 'action': 'aggregate sample', 'target': 'metric bucket', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_usage_sample_request(self):
+        self.assertEqual(aggregate_sample_usage_sample({'id': 'bad', 'kind': '', 'target': 'metric bucket', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'metric bucket', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'usage-sample-001', 'kind': 'aggregate sample', 'target': 'metric bucket', 'priority': 2, 'metadata': {'source': 'Cost and Latency Dashboard', 'track': 'llm-engineering'}}
+        original = dict(request)
+        aggregate_sample_usage_sample(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

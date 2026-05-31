@@ -1,13 +1,21 @@
 import unittest
-from lab import EventLoop
-class EventLoopTest(unittest.TestCase):
-    def test_runs_in_time_order(self):
-        loop=EventLoop(); seen=[]
-        loop.call_at(5, lambda: seen.append(('late', loop.now)))
-        loop.call_at(1, lambda: seen.append(('early', loop.now)))
-        loop.run(); self.assertEqual(seen, [('early',1), ('late',5)])
-    def test_preserves_insertion_order_for_same_time(self):
-        loop=EventLoop(); seen=[]
-        loop.call_at(2, lambda: seen.append('a')); loop.call_at(2, lambda: seen.append('b'))
-        loop.run(); self.assertEqual(seen, ['a','b'])
-if __name__ == '__main__': unittest.main()
+
+from lab import schedule_callback_async_task
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_async_task_request(self):
+        self.assertEqual(schedule_callback_async_task({'id': 'async-task-001', 'kind': 'schedule callback', 'target': 'ready queue', 'priority': 2, 'metadata': {'source': 'Event Loop and Async Runtime', 'track': 'systems-programming'}}), {'id': 'async-task-001', 'action': 'schedule callback', 'target': 'ready queue', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_async_task_request(self):
+        self.assertEqual(schedule_callback_async_task({'id': 'bad', 'kind': '', 'target': 'ready queue', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'ready queue', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'async-task-001', 'kind': 'schedule callback', 'target': 'ready queue', 'priority': 2, 'metadata': {'source': 'Event Loop and Async Runtime', 'track': 'systems-programming'}}
+        original = dict(request)
+        schedule_callback_async_task(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

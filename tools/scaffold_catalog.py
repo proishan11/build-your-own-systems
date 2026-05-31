@@ -13,7 +13,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CATALOG = ROOT / "curriculum" / "catalog" / "project-catalog.md"
+CATALOG_DIR = ROOT / "curriculum" / "catalog"
+CATALOG = CATALOG_DIR / "project-catalog.md"
+CATALOG_CHAPTERS = CATALOG_DIR / "chapters"
 MANIFEST = ROOT / "curriculum" / "curriculum.json"
 
 
@@ -46,17 +48,43 @@ def slugify(value: str) -> str:
     return value.strip("-")
 
 
+def catalog_sources() -> list[Path]:
+    chapter_files = sorted(CATALOG_CHAPTERS.glob("*.md"))
+    return chapter_files or [CATALOG]
+
+
+def table_cells(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def clean_project_name(value: str) -> str:
+    value = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", value)
+    return value.replace("`", "").strip()
+
+
 def parse_catalog() -> list[tuple[str, str]]:
-    section = None
     projects = []
-    for line in CATALOG.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## "):
-            section = line[3:].strip()
-        elif line.startswith("### ") and section not in {
-            "How To Read This Catalog",
-            "Recommended Staff-Level Path",
-        }:
-            projects.append((section, line[4:].strip()))
+    seen = set()
+    for source in catalog_sources():
+        section = None
+        for line in source.read_text(encoding="utf-8").splitlines():
+            if line.startswith("## "):
+                section = line[3:].strip()
+            elif line.startswith("### ") and section in SECTION_TO_TRACK:
+                project = clean_project_name(line[4:])
+                key = (section, project)
+                if key not in seen:
+                    seen.add(key)
+                    projects.append(key)
+            elif line.startswith("| ") and section in SECTION_TO_TRACK:
+                cells = table_cells(line)
+                if len(cells) < 4 or cells[0] in {"Project", "---"}:
+                    continue
+                project = clean_project_name(cells[0])
+                key = (section, project)
+                if key not in seen:
+                    seen.add(key)
+                    projects.append(key)
     return projects
 
 
@@ -97,21 +125,26 @@ def main() -> int:
 
     missing_files = []
     missing_manifest_entries = []
+    non_project_specific = []
     for section, project in projects:
         exercise_ids, _workspace, paths = expected_paths(section, project)
         for exercise_id in exercise_ids:
             if exercise_id not in manifest_ids:
                 missing_manifest_entries.append(exercise_id)
+            else:
+                exercise = next(item for item in manifest["exercises"] if item["id"] == exercise_id)
+                if exercise.get("catalog_depth") != "project-specific":
+                    non_project_specific.append(exercise_id)
         for path in paths:
             if not path.exists():
                 missing_files.append(path.relative_to(ROOT))
 
-    print(f"Catalog projects: {len(projects)}")
+    print(f"Project ladders from catalog: {len(projects)}")
     print(f"Expected exercises per project: {len(EXERCISES)}")
     print("Expected files per exercise: exercise markdown, lab module, test module")
     print(f"Manifest exercises: {len(manifest['exercises'])}")
 
-    if missing_manifest_entries or missing_files:
+    if missing_manifest_entries or missing_files or non_project_specific:
         if missing_manifest_entries:
             print("\nMissing manifest entries:")
             for exercise_id in missing_manifest_entries:
@@ -120,9 +153,13 @@ def main() -> int:
             print("\nMissing scaffold files:")
             for path in missing_files:
                 print(f"- {path}")
+        if non_project_specific:
+            print("\nProject ladder entries missing project-specific depth metadata:")
+            for exercise_id in non_project_specific:
+                print(f"- {exercise_id}")
         return 1
 
-    print("Catalog implementation ladders are complete.")
+    print("Project-specific implementation ladders are complete.")
     return 0
 
 

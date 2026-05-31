@@ -1,8 +1,21 @@
 import unittest
-from lab import Model
-class ModelTest(unittest.TestCase):
-    def test_step(self):
-        m=Model({'w':1.0}); m.step({'w':0.5}, lr=0.1); self.assertAlmostEqual(m.params['w'],0.95)
-    def test_checkpoint(self):
-        m=Model({'w':1.0}); ck=m.checkpoint(7); m2,step=Model.load(ck); self.assertEqual((m2.params,step), ({'w':1.0},7))
-if __name__ == '__main__': unittest.main()
+
+from lab import allreduce_shard_gradient_shard
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_gradient_shard_request(self):
+        self.assertEqual(allreduce_shard_gradient_shard({'id': 'gradient-shard-001', 'kind': 'allreduce shard', 'target': 'worker ring', 'priority': 2, 'metadata': {'source': 'Distributed Training Simulator', 'track': 'ml-systems'}}), {'id': 'gradient-shard-001', 'action': 'allreduce shard', 'target': 'worker ring', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_gradient_shard_request(self):
+        self.assertEqual(allreduce_shard_gradient_shard({'id': 'bad', 'kind': '', 'target': 'worker ring', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'worker ring', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'gradient-shard-001', 'kind': 'allreduce shard', 'target': 'worker ring', 'priority': 2, 'metadata': {'source': 'Distributed Training Simulator', 'track': 'ml-systems'}}
+        original = dict(request)
+        allreduce_shard_gradient_shard(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

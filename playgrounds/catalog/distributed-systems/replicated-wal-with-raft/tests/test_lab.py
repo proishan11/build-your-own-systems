@@ -1,10 +1,21 @@
 import unittest
-from lab import LogMismatch, RaftLog
-class RaftLogTest(unittest.TestCase):
-    def test_append_after_match(self):
-        l=RaftLog([(1,'a')]); l.append_entries(1,1,[(1,'b')]); self.assertEqual(l.entries(), [(1,'a'),(1,'b')])
-    def test_reject_mismatch(self):
-        with self.assertRaises(LogMismatch): RaftLog([(2,'a')]).append_entries(1,1,[])
-    def test_truncate_conflict(self):
-        l=RaftLog([(1,'a'),(2,'old')]); l.append_entries(1,1,[(3,'new')]); self.assertEqual(l.entries(), [(1,'a'),(3,'new')])
-if __name__ == '__main__': unittest.main()
+
+from lab import append_entries_raft_log_entry
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_raft_log_entry_request(self):
+        self.assertEqual(append_entries_raft_log_entry({'id': 'raft-log-entry-001', 'kind': 'append entries', 'target': 'replica log', 'priority': 2, 'metadata': {'source': 'Replicated WAL With Raft', 'track': 'distributed-systems'}}), {'id': 'raft-log-entry-001', 'action': 'append entries', 'target': 'replica log', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_raft_log_entry_request(self):
+        self.assertEqual(append_entries_raft_log_entry({'id': 'bad', 'kind': '', 'target': 'replica log', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'replica log', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'raft-log-entry-001', 'kind': 'append entries', 'target': 'replica log', 'priority': 2, 'metadata': {'source': 'Replicated WAL With Raft', 'track': 'distributed-systems'}}
+        original = dict(request)
+        append_entries_raft_log_entry(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

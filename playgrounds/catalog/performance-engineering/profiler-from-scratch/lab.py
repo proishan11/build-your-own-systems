@@ -1,14 +1,11 @@
-"""Learner implementation stub for Profiler From Scratch First Implementation Lab.
+"""Learner implementation stub for Profiler From Scratch: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `aggregate_sample_stack_sample`.
 """
 
-def p95(values: list[int]) -> int:
-    # TODO
-    raise NotImplementedError
-def summarize(events: list[dict], group_key: str) -> dict:
-    # TODO
+def aggregate_sample_stack_sample(request: dict) -> dict:
+    """Validate and build the core operation for a stack sample request before it mutates profile tree."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

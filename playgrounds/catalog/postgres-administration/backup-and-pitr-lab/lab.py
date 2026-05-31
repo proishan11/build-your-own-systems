@@ -1,12 +1,11 @@
-"""Learner implementation stub for Backup and PITR Lab First Implementation Lab.
+"""Learner implementation stub for Backup and PITR Lab: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `restore_target_wal_segment`.
 """
 
-class RestoreError(Exception): pass
-def plan_restore(backups: list[int], wal_segments: list[tuple[int,int]], target: int) -> dict:
-    # TODO
+def restore_target_wal_segment(request: dict) -> dict:
+    """Validate and build the core operation for a wal segment request before it mutates backup catalog."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

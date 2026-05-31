@@ -1,8 +1,21 @@
 import unittest
-from lab import FeatureStore
-class FeatureTest(unittest.TestCase):
-    def test_as_of(self):
-        s=FeatureStore(); s.put('u1','age',10,30); s.put('u1','age',20,31); self.assertEqual(s.get_as_of('u1','age',15),30)
-    def test_no_future_leakage(self):
-        s=FeatureStore(); s.put('u1','age',20,31); self.assertIsNone(s.get_as_of('u1','age',10))
-if __name__ == '__main__': unittest.main()
+
+from lab import materialize_feature_feature_row
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_feature_row_request(self):
+        self.assertEqual(materialize_feature_feature_row({'id': 'feature-row-001', 'kind': 'materialize feature', 'target': 'feature registry', 'priority': 2, 'metadata': {'source': 'Feature Store', 'track': 'ml-systems'}}), {'id': 'feature-row-001', 'action': 'materialize feature', 'target': 'feature registry', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_feature_row_request(self):
+        self.assertEqual(materialize_feature_feature_row({'id': 'bad', 'kind': '', 'target': 'feature registry', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'feature registry', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'feature-row-001', 'kind': 'materialize feature', 'target': 'feature registry', 'priority': 2, 'metadata': {'source': 'Feature Store', 'track': 'ml-systems'}}
+        original = dict(request)
+        materialize_feature_feature_row(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

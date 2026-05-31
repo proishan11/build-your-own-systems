@@ -1,23 +1,17 @@
 import unittest
 
-from lab_004 import RetryPolicy
+from lab_004 import recover_rate_limited_api_gateway_limit_bypass
 
 
-class RetryPolicyTest(unittest.TestCase):
-    def test_retryable_errors_retry_until_budget_is_exhausted(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout", "unavailable"})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 1})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "retry", "attempt": 2})
-        self.assertEqual(policy.record_failure("op1", "timeout"), {"decision": "give_up", "attempt": 3})
+class RecoveryTest(unittest.TestCase):
+    def test_retries_transient_allow_request_failure(self):
+        self.assertEqual(recover_rate_limited_api_gateway_limit_bypass({'operation': 'allow request', 'error': 'timeout', 'attempt': 1, 'max_attempts': 3, 'resource': 'token bucket'}), {'decision': 'retry', 'next_attempt': 2, 'resource': 'token bucket'})
 
-    def test_non_retryable_error_fails_immediately(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_failure("op2", "permission_denied"), {"decision": "fail", "attempt": 1})
+    def test_fails_permanent_limit_bypass(self):
+        self.assertEqual(recover_rate_limited_api_gateway_limit_bypass({'operation': 'allow request', 'error': 'limit bypass', 'attempt': 1, 'max_attempts': 3, 'resource': 'token bucket'}), {'decision': 'fail', 'reason': 'limit bypass', 'resource': 'token bucket'})
 
-    def test_success_is_sticky(self):
-        policy = RetryPolicy(max_attempts=3, retryable_errors={"timeout"})
-        self.assertEqual(policy.record_success("op3"), {"decision": "success", "attempt": 0})
-        self.assertEqual(policy.record_failure("op3", "timeout"), {"decision": "success", "attempt": 0})
+    def test_gives_up_when_retry_budget_is_exhausted(self):
+        self.assertEqual(recover_rate_limited_api_gateway_limit_bypass({'operation': 'allow request', 'error': 'timeout', 'attempt': 3, 'max_attempts': 3, 'resource': 'token bucket'}), {'decision': 'give_up', 'reason': 'retry budget exhausted', 'resource': 'token bucket'})
 
 
 if __name__ == "__main__":

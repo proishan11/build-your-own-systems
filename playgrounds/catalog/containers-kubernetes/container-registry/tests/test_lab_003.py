@@ -1,31 +1,21 @@
 import unittest
 
-from lab_003 import plan_actions, summarize_plan
+from lab_003 import plan_container_registry_serve_manifests
 
 
-class OperationPlannerTest(unittest.TestCase):
-    def test_plans_create_update_and_delete_in_key_order(self):
-        desired = {"api": 2, "worker": 1}
-        observed = {"api": 1, "old": 1}
+class PlanningTest(unittest.TestCase):
+    def test_plans_deterministic_serve_manifest_operations(self):
+        self.assertEqual(plan_container_registry_serve_manifests({'blob-store-primary': 'ready', 'blob-store-canary': 'ready'}, {'blob-store-primary': 'stale', 'blob-store-old': 'ready'}), [{'op': 'update', 'name': 'blob-store-primary', 'from': 'stale', 'to': 'ready'}, {'op': 'delete', 'name': 'blob-store-old', 'from': 'ready'}, {'op': 'create', 'name': 'blob-store-canary', 'to': 'ready'}])
+
+    def test_noops_when_blob_store_already_matches(self):
+        current = {'blob-store-primary': 'ready'}
+        self.assertEqual(plan_container_registry_serve_manifests(current, dict(current)), [])
+
+    def test_create_actions_are_sorted_by_name(self):
         self.assertEqual(
-            plan_actions(desired, observed),
-            [
-                {"action": "update", "key": "api", "old": 1, "value": 2},
-                {"action": "delete", "key": "old", "old": 1},
-                {"action": "create", "key": "worker", "value": 1},
-            ],
+            plan_container_registry_serve_manifests({'b': 'ready', 'a': 'ready'}, {}),
+            [{'op': 'create', 'name': 'a', 'to': 'ready'}, {'op': 'create', 'name': 'b', 'to': 'ready'}],
         )
-
-    def test_equal_state_has_no_actions(self):
-        self.assertEqual(plan_actions({"api": 1}, {"api": 1}), [])
-
-    def test_summarizes_plan(self):
-        actions = [
-            {"action": "create", "key": "a"},
-            {"action": "update", "key": "b"},
-            {"action": "update", "key": "c"},
-        ]
-        self.assertEqual(summarize_plan(actions), {"create": 1, "update": 2, "delete": 0, "total": 3})
 
 
 if __name__ == "__main__":

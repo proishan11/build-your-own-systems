@@ -19,7 +19,7 @@ tools/learn.py validate-all
 Expected result:
 
 - JSON validation passes.
-- Catalog audit passes.
+- Project ladder audit passes.
 - Skill validation passes.
 - npm dry run succeeds.
 - `validate-all` reaches every exercise and reports expected scaffold failures.
@@ -30,9 +30,9 @@ On a fresh scaffold, `validate-all` should not pass. It should fail because lear
 
 The course currently has:
 
-- 365 manifest exercises.
-- 15 detailed first-wave exercises.
-- 350 catalog exercises across 70 five-exercise ladders.
+- 365 runnable, project-specific scaffolded implementation exercises.
+- 15 foundation exercises.
+- 350 project ladder exercises across 70 five-exercise ladders.
 
 Audit:
 
@@ -43,10 +43,10 @@ python3 tools/scaffold_catalog.py
 Expected output includes:
 
 ```text
-Catalog projects: 70
+Project ladders from catalog: 70
 Expected exercises per project: 5
 Manifest exercises: 365
-Catalog implementation ladders are complete.
+Project-specific implementation ladders are complete.
 ```
 
 ## Adding A New Exercise
@@ -103,7 +103,7 @@ Bad placeholders:
 
 Validators should be scoped to the current exercise.
 
-For catalog exercises, prefer:
+For project ladder exercises under `playgrounds/catalog/`, prefer:
 
 ```bash
 python3 -m unittest discover -s tests -p test_lab_003.py

@@ -1,7 +1,21 @@
 import unittest
-from lab import NoCandidate, choose_replica
-class FailoverTest(unittest.TestCase):
-    def test_choose_lowest_lag(self): self.assertEqual(choose_replica([{'name':'a','lag':5,'healthy':True},{'name':'b','lag':1,'healthy':True}], 10)['name'], 'b')
-    def test_no_candidate(self):
-        with self.assertRaises(NoCandidate): choose_replica([{'name':'a','lag':50,'healthy':True}], 10)
-if __name__ == '__main__': unittest.main()
+
+from lab import promote_replica_replica_status
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_replica_status_request(self):
+        self.assertEqual(promote_replica_replica_status({'id': 'replica-status-001', 'kind': 'promote replica', 'target': 'failover plan', 'priority': 2, 'metadata': {'source': 'Replication and Failover Lab', 'track': 'postgres-administration'}}), {'id': 'replica-status-001', 'action': 'promote replica', 'target': 'failover plan', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_replica_status_request(self):
+        self.assertEqual(promote_replica_replica_status({'id': 'bad', 'kind': '', 'target': 'failover plan', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'failover plan', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'replica-status-001', 'kind': 'promote replica', 'target': 'failover plan', 'priority': 2, 'metadata': {'source': 'Replication and Failover Lab', 'track': 'postgres-administration'}}
+        original = dict(request)
+        promote_replica_replica_status(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

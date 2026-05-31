@@ -1,23 +1,11 @@
-"""Learner implementation stub for Layer 4 Load Balancer First Implementation Lab.
+"""Learner implementation stub for Layer 4 Load Balancer: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `choose_backend_tcp_flow`.
 """
 
-class NoHealthyBackends(Exception): pass
-class LoadBalancer:
-    def __init__(self): pass
-    def add(self, name: str):
-        # TODO: Register backend.
-        raise NotImplementedError
-    def set_health(self, name: str, healthy: bool):
-        # TODO: Update health.
-        raise NotImplementedError
-    def acquire(self) -> str:
-        # TODO: Return healthy least-connections backend and increment active count.
-        raise NotImplementedError
-    def release(self, name: str):
-        # TODO: Decrement active count.
-        raise NotImplementedError
+def choose_backend_tcp_flow(request: dict) -> dict:
+    """Validate and build the core operation for a tcp flow request before it mutates backend pool."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

@@ -1,11 +1,11 @@
-"""Learner implementation stub for Supply-Chain Scanner First Implementation Lab.
+"""Learner implementation stub for Supply-Chain Scanner: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `scan_artifact_package_artifact`.
 """
 
-def scan(dependencies: dict[str,str], advisories: list[dict]) -> list[dict]:
-    # TODO: Versions are simple integers encoded as strings for this lab.
+def scan_artifact_package_artifact(request: dict) -> dict:
+    """Validate and build the core operation for a package artifact request before it mutates sbom index."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

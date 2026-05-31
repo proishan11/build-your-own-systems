@@ -1,20 +1,11 @@
-"""Learner implementation stub for Agent Security Lab First Implementation Lab.
+"""Learner implementation stub for Agent Security Lab: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `classify_tool_agent_tool_call`.
 """
 
-READ_ONLY = {"read_file", "search", "list_issues"}
-MUTATING = {"write_file", "create_pr", "restart_service"}
-DENIED = {"exfiltrate_secret", "disable_audit_log", "rm_rf"}
-
-
-def classify_tool_call(tool: str, args: dict) -> tuple[str, str]:
-    """Return (decision, reason) for an agent tool call.
-
-    decision is one of: "allow", "approval", "deny".
-    """
-    # TODO: Implement explicit classification and include a useful reason.
+def classify_tool_agent_tool_call(request: dict) -> dict:
+    """Validate and build the core operation for an agent tool call request before it mutates tool policy."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

@@ -219,7 +219,7 @@ Then repeat the loop.
 
 ### 10. Continue A Project Ladder
 
-For catalog projects, each project has five exercises:
+For project ladders, each project has five exercises:
 
 1. core mechanism and first invariant
 2. state model and invariants
@@ -230,7 +230,7 @@ For catalog projects, each project has five exercises:
 Ask:
 
 ```text
-Use $interactive-learning-coach. Continue the current catalog project ladder.
+Use $interactive-learning-coach. Continue the current project ladder.
 Show me what changed conceptually from the previous exercise to this one.
 ```
 

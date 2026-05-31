@@ -1,17 +1,11 @@
-"""Learner implementation stub for Vim Kata Track First Implementation Lab.
+"""Learner implementation stub for Vim Kata Track: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `apply_motion_editor_command`.
 """
 
-def delete_lines(lines: list[str], start: int, end: int) -> list[str]:
-    # TODO: 1-based inclusive range.
-    raise NotImplementedError
-def insert_line(lines: list[str], index: int, line: str) -> list[str]:
-    # TODO
-    raise NotImplementedError
-def substitute(lines: list[str], old: str, new: str, start: int, end: int) -> list[str]:
-    # TODO
+def apply_motion_editor_command(request: dict) -> dict:
+    """Validate and build the core operation for a editor command request before it mutates buffer state."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

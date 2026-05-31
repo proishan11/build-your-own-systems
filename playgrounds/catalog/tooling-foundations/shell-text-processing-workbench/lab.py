@@ -1,11 +1,11 @@
-"""Learner implementation stub for Shell Text Processing Workbench First Implementation Lab.
+"""Learner implementation stub for Shell Text Processing Workbench: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `filter_record_text_record`.
 """
 
-def wc(data: bytes) -> tuple[int,int,int]:
-    # TODO: Return (lines, words, bytes).
+def filter_record_text_record(request: dict) -> dict:
+    """Validate and build the core operation for a text record request before it mutates pipeline stage."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

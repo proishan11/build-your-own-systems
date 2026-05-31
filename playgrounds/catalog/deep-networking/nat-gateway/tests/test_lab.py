@@ -1,10 +1,21 @@
 import unittest
-from lab import NAT, NoMapping
-class NATTest(unittest.TestCase):
-    def test_outbound_reuses_mapping(self):
-        n=NAT('203.0.113.1'); a=n.outbound('10.0.0.2',123,'8.8.8.8',53); b=n.outbound('10.0.0.2',123,'8.8.8.8',53); self.assertEqual(a,b)
-    def test_inbound_reverse(self):
-        n=NAT('203.0.113.1'); _,port=n.outbound('10.0.0.2',123,'8.8.8.8',53); self.assertEqual(n.inbound(port,'8.8.8.8',53), ('10.0.0.2',123))
-    def test_unknown_inbound(self):
-        with self.assertRaises(NoMapping): NAT('x').inbound(40000,'8.8.8.8',53)
-if __name__ == '__main__': unittest.main()
+
+from lab import allocate_port_outbound_flow
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_outbound_flow_request(self):
+        self.assertEqual(allocate_port_outbound_flow({'id': 'outbound-flow-001', 'kind': 'allocate port', 'target': 'translation table', 'priority': 2, 'metadata': {'source': 'NAT Gateway', 'track': 'deep-networking'}}), {'id': 'outbound-flow-001', 'action': 'allocate port', 'target': 'translation table', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_outbound_flow_request(self):
+        self.assertEqual(allocate_port_outbound_flow({'id': 'bad', 'kind': '', 'target': 'translation table', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'translation table', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'outbound-flow-001', 'kind': 'allocate port', 'target': 'translation table', 'priority': 2, 'metadata': {'source': 'NAT Gateway', 'track': 'deep-networking'}}
+        original = dict(request)
+        allocate_port_outbound_flow(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

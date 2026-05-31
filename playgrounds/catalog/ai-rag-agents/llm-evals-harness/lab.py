@@ -1,14 +1,11 @@
-"""Learner implementation stub for LLM Evals Harness First Implementation Lab.
+"""Learner implementation stub for LLM Evals Harness: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `score_answer_eval_case`.
 """
 
-def precision_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
-    # TODO
-    raise NotImplementedError
-def citations_supported(citations: list[str], retrieved: set[str]) -> bool:
-    # TODO
+def score_answer_eval_case(request: dict) -> dict:
+    """Validate and build the core operation for a eval case request before it mutates score rubric."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

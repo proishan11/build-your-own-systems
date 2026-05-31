@@ -1,16 +1,11 @@
-"""Learner implementation stub for QUIC-Like Reliable UDP Transport First Implementation Lab.
+"""Learner implementation stub for QUIC-Like Reliable UDP Transport: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `ack_range_quic_frame`.
 """
 
-class StreamReassembler:
-    def __init__(self): pass
-    def push(self, offset: int, data: bytes) -> bytes:
-        # TODO: Buffer frame and return newly contiguous bytes.
-        raise NotImplementedError
-    def next_offset(self) -> int:
-        # TODO: Return next expected offset.
-        raise NotImplementedError
+def ack_range_quic_frame(request: dict) -> dict:
+    """Validate and build the core operation for a quic frame request before it mutates connection state."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

@@ -1,56 +1,57 @@
-# Exercise 001: Admission Controller First Implementation Lab
+# Exercise 001: Admission Controller Core Mechanism
 
 Shared concept chapter: [reconciliation-and-controllers.md](../../../../../curriculum/concepts/containers-kubernetes/reconciliation-and-controllers.md)
 
 ## Concept Primer
 
-This first lab turns **Admission Controller** from a broad project idea into a concrete implementation problem. You are building one narrow mechanism, but you should treat it like production code: name the invariant, make the state explicit, and let the tests describe externally visible behavior.
+This exercise is a project-specific implementation milestone for **Admission Controller**. The work is centered on `admit_object_admission_request`, not on a generic scaffold. You will implement behavior for **admission request** moving through **policy set** while preserving the project invariant.
 
-The implementation target is: Implement a reconciliation decision for desired replicas.
+The implementation target is: Implement `admit_object_admission_request` so Admission Controller has a concrete implementation boundary for admission requests before they touch policy set.
 
 ## Why This Matters
 
-Large systems become learnable when you can isolate a small correctness boundary. A Staff-level engineer does not begin by wiring together a giant demo. They find the smallest behavior that protects the future design, implement it cleanly, and use tests to keep later changes honest.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Admission Controller and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-Cloud-native systems are control loops. Compare desired state with observed state, choose the smallest safe action, and make repeated execution converge rather than drift.
+Think of this component as a gate around **policy set**. A **admission request** arrives, the component decides whether `admit object` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this lab, trace one input through the component: what state is read, what decision is made, what state changes, and what result becomes visible to the caller.
+The local state should be boring and inspectable. If you cannot explain how `policy bypass` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-After each public operation, the component must preserve this contract: compare desired and observed replica counts; return create/delete/noop actions; update status message. If a later feature makes this invariant harder to maintain, the design should expose that tension instead of hiding it in incidental code.
+Only valid admission requests may become admit object operations against policy set; malformed input must produce a deterministic rejection.
 
 ## Tiny Example
 
-Start with the smallest state the tests can exercise. Apply one valid operation and inspect the returned value or stored state. Then apply one boundary operation: a mismatch, duplicate, missing value, limit crossing, malformed input, or unsupported action. The second case is where the invariant usually becomes clear.
+A valid request with id `admission-request-001`, kind `admit object`, and target `policy set` becomes a concrete operation. A request with an empty kind is rejected before it can mutate state.
 
 ## Common Misconceptions
 
-- A controller action only runs once.
-- Delete and recreate is always a safe repair.
-- Container metadata is less important than process startup.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this component own, and what state is merely input?
-2. What is the one condition that must be checked before mutation?
-3. What should happen for the boundary case in the tests?
-4. What information would you log or expose if this failed in production?
+1. What state does `admit_object_admission_request` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `policy bypass` happened in production?
 
 ## Goal
 
-Implement a reconciliation decision for desired replicas.
+Implement `admit_object_admission_request` so Admission Controller has a concrete implementation boundary for admission requests before they touch policy set.
 
 ## Concepts
 
-- reconciliation
-- desired vs observed state
-- idempotency
-- runtime isolation
+- desired state
+- observed state
+- idempotent reconciliation
+- isolation
 
 ## Files To Edit
 
@@ -60,49 +61,47 @@ Implement a reconciliation decision for desired replicas.
 
 Your implementation must:
 
-- compare desired and observed replica counts
-- return create/delete/noop actions
-- update status message
-- make repeated reconciliation idempotent
+- build valid admission requests into a stable project operation
+- preserve id, target, and priority
+- reject malformed requests with a stable reason
+- avoid mutating caller-owned input
 
 ## Design Hints
 
-- Compute the diff before taking an action.
-- Make repeated calls produce the same end state.
-- Return status that explains why the action was chosen.
-- Keep the implementation small enough that each test maps to a named behavior, not a side effect.
+- Name the validation checks before building the output dictionary.
+- Treat `policy bypass` as the kind of bad input that must never reach mutation code.
+- Return plain dictionaries so the tests can inspect the domain decision directly.
 
 ## Layered Hints
 
 ### Hint 1
 
-Write down the state shape first. Most of these labs become straightforward once the data structure reflects the invariant.
+Start with the expected dictionaries in `test_lab.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Implement the validation branch before the mutation branch. Rejecting or no-op behavior is often where correctness gets lost.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the first passing implementation, reread the tests and remove any accidental coupling to test literals. The code should satisfy the contract, not memorize the examples.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
 Run from `playgrounds/catalog/containers-kubernetes/admission-controller`:
 
 ```bash
-python3 -m unittest discover -s tests -p test_lab.py -p test_lab.py
+python3 -m unittest discover -s tests -p test_lab.py
 ```
 
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Reconciliation and controllers: ../../../../../curriculum/concepts/containers-kubernetes/reconciliation-and-controllers.md
-- Kubernetes controllers: https://kubernetes.io/docs/concepts/architecture/controller/
+- Kubernetes controller docs: https://kubernetes.io/docs/concepts/architecture/controller/
 
 ## Staff-Level Review Questions
 
-1. What invariant does this first component protect?
-2. What edge case would become a production incident later?
-3. What should the next exercise add after this passes?
-4. What metric, trace, or audit event would make failures visible?
+1. What makes this implementation specific to Admission Controller, rather than a generic CRUD helper?
+2. Which failure mode does `policy bypass` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

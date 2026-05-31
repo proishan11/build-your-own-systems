@@ -1,20 +1,11 @@
-"""Learner implementation stub for Secrets Manager First Implementation Lab.
+"""Learner implementation stub for Secrets Manager: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `rotate_secret_secret_version`.
 """
 
-class AccessDenied(Exception): pass
-class SecretStore:
-    def __init__(self): pass
-    def put(self, name: str, value: str, readers: set[str]):
-        # TODO
-        raise NotImplementedError
-    def get(self, actor: str, name: str) -> str:
-        # TODO
-        raise NotImplementedError
-    def audit(self) -> list[dict]:
-        # TODO
-        raise NotImplementedError
+def rotate_secret_secret_version(request: dict) -> dict:
+    """Validate and build the core operation for a secret version request before it mutates secret store."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

@@ -1,57 +1,57 @@
-# Exercise 005: HTTP Server From Scratch Integration Simulation and Operational Report
+# Exercise 005: HTTP Server From Scratch Integration Scenario
 
 Shared concept chapter: [reliable-transport.md](../../../../../curriculum/concepts/networking/reliable-transport.md)
 
 ## Concept Primer
 
-This exercise deepens **HTTP Server From Scratch** by adding the next implementation boundary after the starter lab. The focus is not broad feature count; it is building one mechanism that later project milestones can trust.
+This exercise is a project-specific implementation milestone for **HTTP Server From Scratch**. The work is centered on `run_http_server_from_scratch_scenario`, not on a generic scaffold. You will implement behavior for **http request** moving through **route table** while preserving the project invariant.
 
-The implementation target is: Implement a small deterministic scenario runner that produces final state, metrics, invariant status, and violations.
+The implementation target is: Implement `run_http_server_from_scratch_scenario` so HTTP Server From Scratch has a deterministic integration simulation with state, `responses_sent`, failures, recoveries, and invariant reporting.
 
 ## Why This Matters
 
-A serious systems project becomes understandable when each layer has a contract. This exercise asks you to encode that contract in code and tests before adding more moving parts. That habit is what lets Staff engineers change complex systems without guessing.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of HTTP Server From Scratch and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-A network component is a deterministic boundary: bytes or requests enter, are normalized into structured state, then produce a response, route, or rejection.
+Think of this component as a gate around **route table**. A **http request** arrives, the component decides whether `dispatch handler` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this milestone, draw the component as three boxes: input, owned state, and observable output. Correct code validates the input, mutates only owned state, and returns an output that explains what happened.
+The local state should be boring and inspectable. If you cannot explain how `malformed header` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-The component must preserve this contract after every operation: process apply, fail, and recover events in order, return final state without exposing internal mutable structures, record processed, failed, and recovered counts. A later milestone may add scale or distribution, but it must not weaken this invariant.
+The scenario runner must expose route table state and responses_sent metrics while reporting malformed events as violations instead of hiding them.
 
 ## Tiny Example
 
-Take one normal operation and one boundary operation from `tests/test_lab_005.py`. Before coding, write the expected state transition by hand. If the expected transition is hard to state in one sentence, simplify the internal representation first.
+Applying `route table=ready`, recording `responses_sent=3`, failing, and recovering should preserve state and produce one failure plus one recovery.
 
 ## Common Misconceptions
 
-- Passing the first happy-path assertion means the component is finished.
-- Internal state can be exposed directly because this is only a learning scaffold.
-- A retry, replay, duplicate, or malformed input can be handled later without shaping the API now.
-- Do not treat string matching as a protocol implementation; normalize first, then decide.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this exercise introduce that exercise 001 did not need?
-2. Which branch protects the invariant before mutation?
-3. What behavior must remain deterministic for review and debugging?
-4. What would you measure or log when this component misbehaves?
+1. What state does `run_http_server_from_scratch_scenario` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `malformed header` happened in production?
 
 ## Goal
 
-Implement a small deterministic scenario runner that produces final state, metrics, invariant status, and violations.
+Implement `run_http_server_from_scratch_scenario` so HTTP Server From Scratch has a deterministic integration simulation with state, `responses_sent`, failures, recoveries, and invariant reporting.
 
 ## Concepts
 
 - protocol parsing
 - connection state
+- timeouts
 - routing decisions
-- defensive boundaries
 
 ## Files To Edit
 
@@ -61,31 +61,30 @@ Implement a small deterministic scenario runner that produces final state, metri
 
 Your implementation must:
 
-- process apply, fail, and recover events in order
-- return final state without exposing internal mutable structures
-- record processed, failed, and recovered counts
-- mark invariant violations for malformed events instead of crashing silently
+- process apply, metric, fail, and recover events in order
+- track `responses_sent`, failures, and recoveries
+- return invariant_ok and violations
+- handle empty scenarios deterministically
 
 ## Design Hints
 
-- Keep the representation boring and explicit; clever encodings hide invariants.
-- Implement validation and idempotency before optimizing the successful path.
-- Prefer deterministic ordering for every returned list, report, or plan.
-- Make boundary behavior visible in the return value or exception type.
+- Initialize the full report shape before processing events.
+- Treat missing resources as violations, not exceptions.
+- Keep metric defaults explicit so dashboards do not infer missing data.
 
 ## Layered Hints
 
 ### Hint 1
 
-Start with the data structure that makes the invariant obvious. Most of the code should become simple conditionals over that structure.
+Start with the expected dictionaries in `test_lab_005.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Run the test file directly and implement one assertion at a time. Do not start by trying to satisfy every scenario at once.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the tests pass, look for accidental mutation leaks: returned dictionaries and lists should not let callers corrupt internal state.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
@@ -98,12 +97,11 @@ python3 -m unittest discover -s tests -p test_lab_005.py
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Reliable transport concept chapter: ../../../../../curriculum/concepts/networking/reliable-transport.md
-- RFC 9293 TCP: https://www.rfc-editor.org/rfc/rfc9293
+- RFC 9112 HTTP/1.1: https://www.rfc-editor.org/rfc/rfc9112
 
 ## Staff-Level Review Questions
 
-1. What invariant did this milestone add or strengthen?
-2. Which malformed, duplicate, stale, or partial input should be tested next?
-3. How would this implementation behave under replay or retry?
-4. What would make this component easier to debug in production?
+1. What makes this implementation specific to HTTP Server From Scratch, rather than a generic CRUD helper?
+2. Which failure mode does `malformed header` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

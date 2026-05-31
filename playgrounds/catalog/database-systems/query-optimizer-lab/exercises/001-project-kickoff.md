@@ -1,49 +1,50 @@
-# Exercise 001: Query Optimizer Lab First Implementation Lab
+# Exercise 001: Query Optimizer Lab Core Mechanism
 
 Shared concept chapter: [write-ahead-logs.md](../../../../../curriculum/concepts/storage/write-ahead-logs.md)
 
 ## Concept Primer
 
-This first lab turns **Query Optimizer Lab** from a broad project idea into a concrete implementation problem. You are building one narrow mechanism, but you should treat it like production code: name the invariant, make the state explicit, and let the tests describe externally visible behavior.
+This exercise is a project-specific implementation milestone for **Query Optimizer Lab**. The work is centered on `choose_plan_query_predicate`, not on a generic scaffold. You will implement behavior for **query predicate** moving through **plan space** while preserving the project invariant.
 
-The implementation target is: Choose a physical plan from simple table statistics.
+The implementation target is: Implement `choose_plan_query_predicate` so Query Optimizer Lab has a concrete implementation boundary for query predicate requests before they touch plan space.
 
 ## Why This Matters
 
-Large systems become learnable when you can isolate a small correctness boundary. A Staff-level engineer does not begin by wiring together a giant demo. They find the smallest behavior that protects the future design, implement it cleanly, and use tests to keep later changes honest.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Query Optimizer Lab and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-A database component turns logical operations into durable, inspectable state. Every byte layout or index decision should help later reads, recovery, or consistency checks.
+Think of this component as a gate around **plan space**. A **query predicate** arrives, the component decides whether `choose plan` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this lab, trace one input through the component: what state is read, what decision is made, what state changes, and what result becomes visible to the caller.
+The local state should be boring and inspectable. If you cannot explain how `bad cardinality estimate` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-After each public operation, the component must preserve this contract: prefer index scans for selective indexed predicates; use table scans when no useful index exists; estimate output rows. If a later feature makes this invariant harder to maintain, the design should expose that tension instead of hiding it in incidental code.
+Only valid query predicate requests may become choose plan operations against plan space; malformed input must produce a deterministic rejection.
 
 ## Tiny Example
 
-Start with the smallest state the tests can exercise. Apply one valid operation and inspect the returned value or stored state. Then apply one boundary operation: a mismatch, duplicate, missing value, limit crossing, malformed input, or unsupported action. The second case is where the invariant usually becomes clear.
+A valid request with id `query-predicate-001`, kind `choose plan`, and target `plan space` becomes a concrete operation. A request with an empty kind is rejected before it can mutate state.
 
 ## Common Misconceptions
 
-- In-memory correctness automatically becomes durable correctness.
-- Index order is a convenience rather than a contract.
-- Recovery can infer intent from incomplete state.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this component own, and what state is merely input?
-2. What is the one condition that must be checked before mutation?
-3. What should happen for the boundary case in the tests?
-4. What information would you log or expose if this failed in production?
+1. What state does `choose_plan_query_predicate` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `bad cardinality estimate` happened in production?
 
 ## Goal
 
-Choose a physical plan from simple table statistics.
+Implement `choose_plan_query_predicate` so Query Optimizer Lab has a concrete implementation boundary for query predicate requests before they touch plan space.
 
 ## Concepts
 
@@ -60,49 +61,47 @@ Choose a physical plan from simple table statistics.
 
 Your implementation must:
 
-- prefer index scans for selective indexed predicates
-- use table scans when no useful index exists
-- estimate output rows
-- return explainable plan objects
+- build valid query predicate requests into a stable project operation
+- preserve id, target, and priority
+- reject malformed requests with a stable reason
+- avoid mutating caller-owned input
 
 ## Design Hints
 
-- Make the on-disk or logical representation explicit first.
-- Keep ordering and identity stable across operations.
-- Add the edge case where state is empty, full, or partially updated.
-- Keep the implementation small enough that each test maps to a named behavior, not a side effect.
+- Name the validation checks before building the output dictionary.
+- Treat `bad cardinality estimate` as the kind of bad input that must never reach mutation code.
+- Return plain dictionaries so the tests can inspect the domain decision directly.
 
 ## Layered Hints
 
 ### Hint 1
 
-Write down the state shape first. Most of these labs become straightforward once the data structure reflects the invariant.
+Start with the expected dictionaries in `test_lab.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Implement the validation branch before the mutation branch. Rejecting or no-op behavior is often where correctness gets lost.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the first passing implementation, reread the tests and remove any accidental coupling to test literals. The code should satisfy the contract, not memorize the examples.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
 Run from `playgrounds/catalog/database-systems/query-optimizer-lab`:
 
 ```bash
-python3 -m unittest discover -s tests -p test_lab.py -p test_lab.py
+python3 -m unittest discover -s tests -p test_lab.py
 ```
 
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Write-ahead logs: ../../../../../curriculum/concepts/storage/write-ahead-logs.md
-- ARIES recovery paper: https://cs.uwaterloo.ca/~david/cs448/aries-mohan.pdf
+- ARIES paper: https://cs.uwaterloo.ca/~david/cs448/aries-mohan.pdf
 
 ## Staff-Level Review Questions
 
-1. What invariant does this first component protect?
-2. What edge case would become a production incident later?
-3. What should the next exercise add after this passes?
-4. What metric, trace, or audit event would make failures visible?
+1. What makes this implementation specific to Query Optimizer Lab, rather than a generic CRUD helper?
+2. Which failure mode does `bad cardinality estimate` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

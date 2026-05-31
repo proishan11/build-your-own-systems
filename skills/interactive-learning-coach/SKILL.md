@@ -155,9 +155,9 @@ For placeholder code, write compiling stubs that fail behavior tests for the int
 
 Use `references/project-map.md` to select or extend tracks.
 
-If the workspace has `curriculum/catalog/project-catalog.md`, use it for broad project recommendations and learning path design.
+If the workspace has `curriculum/catalog/project-catalog.md`, use it as the project-catalog index. Prefer the chapter files under `curriculum/catalog/chapters/` for broad project recommendations and learning path design.
 
-If the workspace has `curriculum/roadmap/full-curriculum-plan.md`, use it as the source of truth for long-range planning. Use `curriculum/roadmap/scaffolding-sequence.md` for deciding what to create next and `curriculum/roadmap/concept-backlog.md` for concept chapter expansion.
+If the workspace has `curriculum/roadmap/full-curriculum-plan.md`, use it as the roadmap index and prefer detailed files under `curriculum/roadmap/chapters/` for long-range planning. Use `curriculum/roadmap/scaffolding-sequence.md` for deciding what to create next and `curriculum/roadmap/concept-backlog.md` for concept chapter expansion.
 
 Priority tracks:
 

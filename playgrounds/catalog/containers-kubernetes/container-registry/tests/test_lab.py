@@ -1,9 +1,21 @@
 import unittest
-from lab import BlobInUse, Registry
-class RegistryTest(unittest.TestCase):
-    def test_blob_digest(self):
-        r=Registry(); d=r.put_blob(b'a'); self.assertTrue(d.startswith('sha256:')); self.assertTrue(r.has_blob(d))
-    def test_prevent_delete_referenced(self):
-        r=Registry(); d=r.put_blob(b'a'); r.put_manifest('img',[d])
-        with self.assertRaises(BlobInUse): r.delete_blob(d)
-if __name__ == '__main__': unittest.main()
+
+from lab import serve_manifest_image_blob
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_image_blob_request(self):
+        self.assertEqual(serve_manifest_image_blob({'id': 'image-blob-001', 'kind': 'serve manifest', 'target': 'blob store', 'priority': 2, 'metadata': {'source': 'Container Registry', 'track': 'containers-kubernetes'}}), {'id': 'image-blob-001', 'action': 'serve manifest', 'target': 'blob store', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_image_blob_request(self):
+        self.assertEqual(serve_manifest_image_blob({'id': 'bad', 'kind': '', 'target': 'blob store', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'blob store', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'image-blob-001', 'kind': 'serve manifest', 'target': 'blob store', 'priority': 2, 'metadata': {'source': 'Container Registry', 'track': 'containers-kubernetes'}}
+        original = dict(request)
+        serve_manifest_image_blob(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -8,13 +8,13 @@ This file separates the full curriculum map from the runnable course surface.
 - Portable skill: installed and valid.
 - Machine-readable manifest: `curriculum/curriculum.json`.
 - Course CLI: `tools/learn.py`.
-- Runnable scaffold count: 365.
-- Detailed first-wave implementation exercises: 15.
-- Catalog project implementation exercises: 350 across 70 five-exercise ladders.
+- Runnable project-specific implementation exercise count: 365.
+- Foundation exercises: 15.
+- Project ladder exercises: 350 across 70 five-exercise ladders.
 
 ## Runnable Scaffolds
 
-### Detailed First-Wave Exercises
+### Foundation Exercises
 
 | Exercise ID | Status |
 | --- | --- |
@@ -34,9 +34,9 @@ This file separates the full curriculum map from the runnable course surface.
 | `database/003-buffer-pool` | scaffolded |
 | `database/004-btree-insert` | scaffolded |
 
-### Catalog Implementation Ladders
+### Project Implementation Ladders
 
-Every project in [Project Catalog](../catalog/project-catalog.md) now has a five-exercise implementation ladder under:
+Every project in [Project Catalog](../catalog/project-catalog.md) and its chapter files now has a five-exercise implementation ladder under:
 
 ```text
 playgrounds/catalog/<track>/<project>/exercises/
@@ -53,14 +53,14 @@ Each project ladder includes:
 Each implementation exercise includes:
 
 - a concept primer, mental model, invariant, tiny example, misconceptions, and self-check prompts
-- concrete placeholder code in `lab*.py`
-- behavior tests in `tests/test_lab*.py`
+- project-specific placeholder code in `lab*.py`
+- behavior tests with domain fixtures in `tests/test_lab*.py`
 - design hints and layered hints
 - further reading
 - a manifest entry
 - a validation command
 
-These are no longer generic project contracts or one-off starter labs. Each catalog project now has a staged implementation path that moves from the first invariant to state, planning, failure handling, and integration simulation.
+These are no longer generic project contracts or one-off starter labs. Each project ladder now has a staged implementation path with project-specific API names, domain fixtures, edge cases, failure modes, and review prompts.
 
 ## Expected Validation Behavior
 

@@ -1,18 +1,11 @@
-"""Learner implementation stub for xv6-Style Kernel Lab First Implementation Lab.
+"""Learner implementation stub for xv6-Style Kernel Lab: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `enter_kernel_system_call`.
 """
 
-class PageFault(Exception): pass
-class AddressSpace:
-    def __init__(self, page_size: int = 4096):
-        self.page_size = page_size
-    def map(self, vpn: int, frame: int, *, read=True, write=False):
-        # TODO: Store mapping and permissions.
-        raise NotImplementedError
-    def translate(self, va: int, *, write=False) -> int:
-        # TODO: Return physical address or raise PageFault.
-        raise NotImplementedError
+def enter_kernel_system_call(request: dict) -> dict:
+    """Validate and build the core operation for a system call request before it mutates process table."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

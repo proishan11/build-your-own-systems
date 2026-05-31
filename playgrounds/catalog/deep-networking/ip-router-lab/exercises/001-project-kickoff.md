@@ -1,56 +1,57 @@
-# Exercise 001: IP Router Lab First Implementation Lab
+# Exercise 001: IP Router Lab Core Mechanism
 
 Shared concept chapter: [reliable-transport.md](../../../../../curriculum/concepts/networking/reliable-transport.md)
 
 ## Concept Primer
 
-This first lab turns **IP Router Lab** from a broad project idea into a concrete implementation problem. You are building one narrow mechanism, but you should treat it like production code: name the invariant, make the state explicit, and let the tests describe externally visible behavior.
+This exercise is a project-specific implementation milestone for **IP Router Lab**. The work is centered on `forward_packet_ip_packet`, not on a generic scaffold. You will implement behavior for **ip packet** moving through **routing table** while preserving the project invariant.
 
-The implementation target is: Implement longest-prefix-match route selection.
+The implementation target is: Implement `forward_packet_ip_packet` so IP Router Lab has a concrete implementation boundary for ip packet requests before they touch routing table.
 
 ## Why This Matters
 
-Large systems become learnable when you can isolate a small correctness boundary. A Staff-level engineer does not begin by wiring together a giant demo. They find the smallest behavior that protects the future design, implement it cleanly, and use tests to keep later changes honest.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of IP Router Lab and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-Packets are small promises. Each header field constrains what the component may do next: accept, drop, forward, translate, acknowledge, or retransmit.
+Think of this component as a gate around **routing table**. A **ip packet** arrives, the component decides whether `forward packet` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this lab, trace one input through the component: what state is read, what decision is made, what state changes, and what result becomes visible to the caller.
+The local state should be boring and inspectable. If you cannot explain how `ttl expired` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-After each public operation, the component must preserve this contract: store CIDR routes; choose the most specific matching prefix; decrement TTL. If a later feature makes this invariant harder to maintain, the design should expose that tension instead of hiding it in incidental code.
+Only valid ip packet requests may become forward packet operations against routing table; malformed input must produce a deterministic rejection.
 
 ## Tiny Example
 
-Start with the smallest state the tests can exercise. Apply one valid operation and inspect the returned value or stored state. Then apply one boundary operation: a mismatch, duplicate, missing value, limit crossing, malformed input, or unsupported action. The second case is where the invariant usually becomes clear.
+A valid request with id `ip-packet-001`, kind `forward packet`, and target `routing table` becomes a concrete operation. A request with an empty kind is rejected before it can mutate state.
 
 ## Common Misconceptions
 
-- Forwarding logic can ignore stale or ambiguous state.
-- Sequence numbers are just counters.
-- Dropping a packet is always an error instead of sometimes the safest action.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this component own, and what state is merely input?
-2. What is the one condition that must be checked before mutation?
-3. What should happen for the boundary case in the tests?
-4. What information would you log or expose if this failed in production?
+1. What state does `forward_packet_ip_packet` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `ttl expired` happened in production?
 
 ## Goal
 
-Implement longest-prefix-match route selection.
+Implement `forward_packet_ip_packet` so IP Router Lab has a concrete implementation boundary for ip packet requests before they touch routing table.
 
 ## Concepts
 
-- packet state
+- packet headers
 - sequence numbers
-- routing tables
-- failure handling
+- route selection
+- loss behavior
 
 ## Files To Edit
 
@@ -60,49 +61,47 @@ Implement longest-prefix-match route selection.
 
 Your implementation must:
 
-- store CIDR routes
-- choose the most specific matching prefix
-- decrement TTL
-- reject expired packets
+- build valid ip packet requests into a stable project operation
+- preserve id, target, and priority
+- reject malformed requests with a stable reason
+- avoid mutating caller-owned input
 
 ## Design Hints
 
-- Write the decision table before coding branches.
-- Preserve enough metadata to explain each action.
-- Prefer deterministic tie-breaking so tests and incidents are explainable.
-- Keep the implementation small enough that each test maps to a named behavior, not a side effect.
+- Name the validation checks before building the output dictionary.
+- Treat `ttl expired` as the kind of bad input that must never reach mutation code.
+- Return plain dictionaries so the tests can inspect the domain decision directly.
 
 ## Layered Hints
 
 ### Hint 1
 
-Write down the state shape first. Most of these labs become straightforward once the data structure reflects the invariant.
+Start with the expected dictionaries in `test_lab.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Implement the validation branch before the mutation branch. Rejecting or no-op behavior is often where correctness gets lost.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the first passing implementation, reread the tests and remove any accidental coupling to test literals. The code should satisfy the contract, not memorize the examples.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
 Run from `playgrounds/catalog/deep-networking/ip-router-lab`:
 
 ```bash
-python3 -m unittest discover -s tests -p test_lab.py -p test_lab.py
+python3 -m unittest discover -s tests -p test_lab.py
 ```
 
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Reliable transport concept chapter: ../../../../../curriculum/concepts/networking/reliable-transport.md
-- Stanford CS144: https://www.scs.stanford.edu/10au-cs144/
+- RFC 9293 TCP: https://www.rfc-editor.org/rfc/rfc9293
 
 ## Staff-Level Review Questions
 
-1. What invariant does this first component protect?
-2. What edge case would become a production incident later?
-3. What should the next exercise add after this passes?
-4. What metric, trace, or audit event would make failures visible?
+1. What makes this implementation specific to IP Router Lab, rather than a generic CRUD helper?
+2. Which failure mode does `ttl expired` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

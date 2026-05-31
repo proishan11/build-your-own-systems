@@ -1,13 +1,21 @@
 import unittest
-from lab import Scheduler
-class SchedulerTest(unittest.TestCase):
-    def test_round_robin(self):
-        s=Scheduler(); s.add('a'); s.add('b'); s.add('c')
-        self.assertEqual([s.next(),s.next(),s.next(),s.next()], ['a','b','c','a'])
-    def test_skips_blocked_tasks(self):
-        s=Scheduler(); s.add('a'); s.add('b'); s.block('a')
-        self.assertEqual([s.next(),s.next()], ['b','b'])
-    def test_unblock_restores_task(self):
-        s=Scheduler(); s.add('a'); s.add('b'); s.block('a'); s.unblock('a')
-        self.assertIn(s.next(), {'a','b'})
-if __name__ == '__main__': unittest.main()
+
+from lab import bind_pod_pod_placement
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_pod_placement_request(self):
+        self.assertEqual(bind_pod_pod_placement({'id': 'pod-placement-001', 'kind': 'bind pod', 'target': 'node inventory', 'priority': 2, 'metadata': {'source': 'Scheduler Simulator', 'track': 'containers-kubernetes'}}), {'id': 'pod-placement-001', 'action': 'bind pod', 'target': 'node inventory', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_pod_placement_request(self):
+        self.assertEqual(bind_pod_pod_placement({'id': 'bad', 'kind': '', 'target': 'node inventory', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'node inventory', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'pod-placement-001', 'kind': 'bind pod', 'target': 'node inventory', 'priority': 2, 'metadata': {'source': 'Scheduler Simulator', 'track': 'containers-kubernetes'}}
+        original = dict(request)
+        bind_pod_pod_placement(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

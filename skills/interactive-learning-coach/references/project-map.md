@@ -119,10 +119,10 @@ Suggested projects:
 
 ## External Catalog
 
-If present, use `curriculum/catalog/project-catalog.md` as the broader source for project recommendations across operating systems, systems programming, deep networking, security engineering, performance engineering, distributed systems, databases, ML systems, LLM engineering, AI/RAG/agents, Kubernetes, containers, Unix command line, Vim, Git, PostgreSQL administration, and SRE.
+If present, use `curriculum/catalog/project-catalog.md` as the catalog index and `curriculum/catalog/chapters/` as the broader source for project recommendations across operating systems, systems programming, deep networking, security engineering, performance engineering, distributed systems, databases, ML systems, LLM engineering, AI/RAG/agents, Kubernetes, containers, Unix command line, Vim, Git, PostgreSQL administration, and SRE.
 
 If present, use `curriculum/concepts/INDEX.md` to find reusable concept chapters before teaching or scaffolding an exercise.
 
-If present, use `curriculum/roadmap/full-curriculum-plan.md` for sequencing and `curriculum/roadmap/scaffolding-sequence.md` for implementation order.
+If present, use `curriculum/roadmap/full-curriculum-plan.md` as the roadmap index, `curriculum/roadmap/chapters/` for detailed sequencing, and `curriculum/roadmap/scaffolding-sequence.md` for implementation order.
 
 If present, use `curriculum/curriculum.json` as the source of truth for exercise IDs, validation commands, workspace paths, and learner progression.

@@ -1,14 +1,11 @@
-"""Learner implementation stub for Lock Contention Lab First Implementation Lab.
+"""Learner implementation stub for Lock Contention Lab: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `attribute_wait_lock_event`.
 """
 
-def summarize(samples: list[int]) -> dict:
-    # TODO
-    raise NotImplementedError
-def regressed(current: list[int], baseline: list[int], threshold: float) -> bool:
-    # TODO: Compare p95 growth ratio.
+def attribute_wait_lock_event(request: dict) -> dict:
+    """Validate and build the core operation for a lock event request before it mutates wait graph."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

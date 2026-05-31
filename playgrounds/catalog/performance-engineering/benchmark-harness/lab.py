@@ -1,14 +1,11 @@
-"""Learner implementation stub for Benchmark Harness First Implementation Lab.
+"""Learner implementation stub for Benchmark Harness: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `compare_runs_benchmark_sample`.
 """
 
-def summarize(samples: list[int]) -> dict:
-    # TODO
-    raise NotImplementedError
-def regressed(current: list[int], baseline: list[int], threshold: float) -> bool:
-    # TODO: Compare p95 growth ratio.
+def compare_runs_benchmark_sample(request: dict) -> dict:
+    """Validate and build the core operation for a benchmark sample request before it mutates run config."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

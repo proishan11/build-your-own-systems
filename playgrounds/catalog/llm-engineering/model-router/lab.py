@@ -1,24 +1,11 @@
-"""Learner implementation stub for Model Router First Implementation Lab.
+"""Learner implementation stub for Model Router: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `route_model_llm_request`.
 """
 
-class NoModel(Exception):
-    pass
-
-
-class ModelRouter:
-    def __init__(self):
-        pass
-
-    def add(self, name: str, context: int, cost: float, latency: int):
-        # TODO: Register model capabilities.
-        raise NotImplementedError
-
-    def route(self, tokens: int, max_cost: float) -> str:
-        # TODO: Choose the lowest-latency model that can handle the request
-        # within the caller's cost ceiling.
-        raise NotImplementedError
+def route_model_llm_request(request: dict) -> dict:
+    """Validate and build the core operation for an LLM request before it mutates model catalog."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

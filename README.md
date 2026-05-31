@@ -26,12 +26,11 @@ The curriculum covers:
 - LLM application engineering
 - RAG and agent systems
 
-The course currently has 365 runnable scaffold exercises:
+The course currently has 365 runnable, project-specific scaffolded implementation exercises.
 
-- 15 detailed first-wave implementation exercises.
-- 350 catalog implementation exercises across 70 five-exercise project ladders.
+They are organized as 15 foundation exercises plus 350 project ladder exercises across 70 five-exercise ladders.
 
-Each catalog exercise includes a book-like learning section, placeholder implementation, behavior tests, hints, references, and Staff-level review questions. Tests are expected to fail until you implement each solution.
+Every exercise follows the same learning contract: a book-like concept section, project-specific placeholder API, behavior tests with domain fixtures, hints, references, and Staff-level review questions. Tests are expected to fail until you implement each solution.
 
 ## Quick Start
 
@@ -91,7 +90,7 @@ If you want the most coherent starting route:
 2. Database Systems Staff Lab: WAL records, slotted pages, buffer pools, B+ tree insertions.
 3. Distributed Systems Staff Lab: durable logs and replicated-log reasoning.
 4. Networking From Scratch: reliable receiver and IP routing.
-5. Catalog ladders: choose RAG, agents, Kubernetes, PostgreSQL, security, performance, or another domain.
+5. Project ladders: choose RAG, agents, Kubernetes, PostgreSQL, security, performance, or another domain.
 
 Commands:
 
@@ -108,13 +107,13 @@ tools/learn.py next --track go-concurrency
 | Distributed Systems | [Distributed Systems Staff Lab](curriculum/projects/distributed-systems-staff-lab/project.md) | Raft, replicated logs, sharding, leases, membership, failure injection |
 | Database Systems | [Database Systems Staff Lab](curriculum/projects/database-systems-staff-lab/project.md) | WAL, storage engines, indexes, MVCC, query execution, transactions |
 
-The broader catalog lives in [Project Catalog](curriculum/catalog/project-catalog.md).
+The broader catalog starts at [Project Catalog](curriculum/catalog/project-catalog.md) and continues as book-style chapters under [curriculum/catalog/chapters](curriculum/catalog/chapters/).
 
 Reusable mini-chapters live in [Concept Library](curriculum/concepts/INDEX.md).
 
 The full roadmap lives in:
 
-- [Full Curriculum Plan](curriculum/roadmap/full-curriculum-plan.md)
+- [Full Curriculum Plan](curriculum/roadmap/full-curriculum-plan.md), with detailed roadmap chapters under [curriculum/roadmap/chapters](curriculum/roadmap/chapters/)
 - [Scaffolding Sequence](curriculum/roadmap/scaffolding-sequence.md)
 - [Concept Backlog](curriculum/roadmap/concept-backlog.md)
 - [Implementation Status](curriculum/roadmap/implementation-status.md)

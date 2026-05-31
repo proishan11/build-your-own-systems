@@ -1,10 +1,21 @@
 import unittest
-from lab import StreamReassembler
-class ReassemblerTest(unittest.TestCase):
-    def test_in_order(self):
-        r=StreamReassembler(); self.assertEqual(r.push(0,b'he'), b'he'); self.assertEqual(r.push(2,b'y'), b'y')
-    def test_out_of_order(self):
-        r=StreamReassembler(); self.assertEqual(r.push(2,b'y'), b''); self.assertEqual(r.push(0,b'he'), b'hey')
-    def test_duplicate(self):
-        r=StreamReassembler(); r.push(0,b'abc'); self.assertEqual(r.push(0,b'abc'), b''); self.assertEqual(r.next_offset(),3)
-if __name__ == '__main__': unittest.main()
+
+from lab import ack_segment_transport_segment
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_transport_segment_request(self):
+        self.assertEqual(ack_segment_transport_segment({'id': 'transport-segment-001', 'kind': 'ack segment', 'target': 'receive window', 'priority': 2, 'metadata': {'source': 'Reliable Transport From Scratch', 'track': 'deep-networking'}}), {'id': 'transport-segment-001', 'action': 'ack segment', 'target': 'receive window', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_transport_segment_request(self):
+        self.assertEqual(ack_segment_transport_segment({'id': 'bad', 'kind': '', 'target': 'receive window', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'receive window', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'transport-segment-001', 'kind': 'ack segment', 'target': 'receive window', 'priority': 2, 'metadata': {'source': 'Reliable Transport From Scratch', 'track': 'deep-networking'}}
+        original = dict(request)
+        ack_segment_transport_segment(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

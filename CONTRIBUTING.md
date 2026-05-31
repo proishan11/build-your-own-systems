@@ -70,11 +70,11 @@ If that local validator is unavailable, at minimum inspect `skills/interactive-l
 
 Use [curriculum/templates/exercise-template.md](curriculum/templates/exercise-template.md) as the base structure.
 
-## Adding A Catalog Project
+## Adding A Project Ladder
 
-Catalog projects should be real implementation ladders, not just project ideas.
+Project ladders should be real implementation work, not just project ideas.
 
-Each catalog project currently has five exercises:
+Each project ladder currently has five exercises:
 
 1. core mechanism and first invariant
 2. state model and invariants
@@ -82,9 +82,10 @@ Each catalog project currently has five exercises:
 4. failure, retry, and recovery boundary
 5. integration simulation and operational report
 
-After adding a catalog project, update:
+After adding a project ladder, update:
 
-- `curriculum/catalog/project-catalog.md`
+- the relevant chapter under `curriculum/catalog/chapters/`
+- `curriculum/catalog/project-catalog.md` if the chapter index or counts change
 - `curriculum/curriculum.json`
 - `playgrounds/catalog/<track>/<project>/`
 - any relevant concept chapter or reading list
@@ -94,6 +95,12 @@ Then run:
 ```bash
 python3 tools/scaffold_catalog.py
 ```
+
+## Documentation Shape
+
+Prefer chapter-sized documents over mega-documents. As a rule of thumb, split a learner-facing Markdown file once it grows past roughly 400 lines or starts mixing unrelated purposes.
+
+Use tables for catalogs, roadmaps, comparisons, and maintenance checklists. Use prose for mental models, learning arcs, and design rationale. Bullets are still useful for short checklists, but they should not be the default shape for long curriculum material.
 
 ## Documentation Style
 

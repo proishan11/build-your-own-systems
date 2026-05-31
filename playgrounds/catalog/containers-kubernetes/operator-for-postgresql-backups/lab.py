@@ -1,11 +1,11 @@
-"""Learner implementation stub for Operator for PostgreSQL Backups First Implementation Lab.
+"""Learner implementation stub for Operator for PostgreSQL Backups: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `start_backup_backup_custom_resource`.
 """
 
-def reconcile(desired: int, observed: list[str]) -> dict:
-    # TODO: Return {'action': ..., 'count': ..., 'status': ...}.
+def start_backup_backup_custom_resource(request: dict) -> dict:
+    """Validate and build the core operation for a backup custom resource request before it mutates backup schedule."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

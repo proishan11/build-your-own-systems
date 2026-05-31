@@ -1,23 +1,11 @@
-"""Learner implementation stub for Human Approval Workflow First Implementation Lab.
+"""Learner implementation stub for Human Approval Workflow: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `route_approval_approval_request`.
 """
 
-class InvalidTransition(Exception): pass
-class ApprovalWorkflow:
-    def __init__(self): pass
-    def request(self, action: str) -> int:
-        # TODO
-        raise NotImplementedError
-    def approve(self, action_id: int):
-        # TODO
-        raise NotImplementedError
-    def reject(self, action_id: int):
-        # TODO
-        raise NotImplementedError
-    def can_execute(self, action_id: int) -> bool:
-        # TODO
-        raise NotImplementedError
+def route_approval_approval_request(request: dict) -> dict:
+    """Validate and build the core operation for a approval request before it mutates approval queue."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
+    raise NotImplementedError

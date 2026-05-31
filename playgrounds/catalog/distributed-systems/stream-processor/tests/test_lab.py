@@ -1,7 +1,21 @@
 import unittest
-from lab import aggregate
-class StreamTest(unittest.TestCase):
-    def test_tumbling_sum(self):
-        events=[(0,'a',1),(3,'a',2),(5,'a',10),(6,'b',4)]
-        self.assertEqual(aggregate(events,5), {(0,'a'):3,(5,'a'):10,(5,'b'):4})
-if __name__ == '__main__': unittest.main()
+
+from lab import advance_watermark_stream_event
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_stream_event_request(self):
+        self.assertEqual(advance_watermark_stream_event({'id': 'stream-event-001', 'kind': 'advance watermark', 'target': 'watermark state', 'priority': 2, 'metadata': {'source': 'Stream Processor', 'track': 'distributed-systems'}}), {'id': 'stream-event-001', 'action': 'advance watermark', 'target': 'watermark state', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_stream_event_request(self):
+        self.assertEqual(advance_watermark_stream_event({'id': 'bad', 'kind': '', 'target': 'watermark state', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'watermark state', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'stream-event-001', 'kind': 'advance watermark', 'target': 'watermark state', 'priority': 2, 'metadata': {'source': 'Stream Processor', 'track': 'distributed-systems'}}
+        original = dict(request)
+        advance_watermark_stream_event(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

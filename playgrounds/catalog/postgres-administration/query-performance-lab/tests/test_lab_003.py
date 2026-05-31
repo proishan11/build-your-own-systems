@@ -1,31 +1,21 @@
 import unittest
 
-from lab_003 import plan_actions, summarize_plan
+from lab_003 import plan_query_performance_lab_recommend_indexs
 
 
-class OperationPlannerTest(unittest.TestCase):
-    def test_plans_create_update_and_delete_in_key_order(self):
-        desired = {"api": 2, "worker": 1}
-        observed = {"api": 1, "old": 1}
+class PlanningTest(unittest.TestCase):
+    def test_plans_deterministic_recommend_index_operations(self):
+        self.assertEqual(plan_query_performance_lab_recommend_indexs({'index-catalog-primary': 'ready', 'index-catalog-canary': 'ready'}, {'index-catalog-primary': 'stale', 'index-catalog-old': 'ready'}), [{'op': 'update', 'name': 'index-catalog-primary', 'from': 'stale', 'to': 'ready'}, {'op': 'delete', 'name': 'index-catalog-old', 'from': 'ready'}, {'op': 'create', 'name': 'index-catalog-canary', 'to': 'ready'}])
+
+    def test_noops_when_index_catalog_already_matches(self):
+        current = {'index-catalog-primary': 'ready'}
+        self.assertEqual(plan_query_performance_lab_recommend_indexs(current, dict(current)), [])
+
+    def test_create_actions_are_sorted_by_name(self):
         self.assertEqual(
-            plan_actions(desired, observed),
-            [
-                {"action": "update", "key": "api", "old": 1, "value": 2},
-                {"action": "delete", "key": "old", "old": 1},
-                {"action": "create", "key": "worker", "value": 1},
-            ],
+            plan_query_performance_lab_recommend_indexs({'b': 'ready', 'a': 'ready'}, {}),
+            [{'op': 'create', 'name': 'a', 'to': 'ready'}, {'op': 'create', 'name': 'b', 'to': 'ready'}],
         )
-
-    def test_equal_state_has_no_actions(self):
-        self.assertEqual(plan_actions({"api": 1}, {"api": 1}), [])
-
-    def test_summarizes_plan(self):
-        actions = [
-            {"action": "create", "key": "a"},
-            {"action": "update", "key": "b"},
-            {"action": "update", "key": "c"},
-        ]
-        self.assertEqual(summarize_plan(actions), {"create": 1, "update": 2, "delete": 0, "total": 3})
 
 
 if __name__ == "__main__":

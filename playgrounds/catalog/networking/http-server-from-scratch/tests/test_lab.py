@@ -1,9 +1,21 @@
 import unittest
-from lab import BadRequest, parse_request
-class HTTPTest(unittest.TestCase):
-    def test_parse_request(self):
-        r=parse_request('GET /x HTTP/1.1\r\nHost: example.com\r\nX-Test: ok\r\n\r\n')
-        self.assertEqual((r.method,r.path,r.version), ('GET','/x','HTTP/1.1')); self.assertEqual(r.headers['host'],'example.com')
-    def test_reject_bad_line(self):
-        with self.assertRaises(BadRequest): parse_request('GET-only\r\n\r\n')
-if __name__ == '__main__': unittest.main()
+
+from lab import dispatch_handler_http_request
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_http_request_request(self):
+        self.assertEqual(dispatch_handler_http_request({'id': 'http-request-001', 'kind': 'dispatch handler', 'target': 'route table', 'priority': 2, 'metadata': {'source': 'HTTP Server From Scratch', 'track': 'networking'}}), {'id': 'http-request-001', 'action': 'dispatch handler', 'target': 'route table', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_http_request_request(self):
+        self.assertEqual(dispatch_handler_http_request({'id': 'bad', 'kind': '', 'target': 'route table', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'route table', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'http-request-001', 'kind': 'dispatch handler', 'target': 'route table', 'priority': 2, 'metadata': {'source': 'HTTP Server From Scratch', 'track': 'networking'}}
+        original = dict(request)
+        dispatch_handler_http_request(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

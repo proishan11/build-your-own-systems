@@ -1,11 +1,11 @@
-"""Learner implementation stub for Feature Flag and Rollout System First Implementation Lab.
+"""Learner implementation stub for Feature Flag and Rollout System: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `evaluate_flag_flag_evaluation`.
 """
 
-def enabled(flag: dict, user_id: str) -> bool:
-    # TODO
+def evaluate_flag_flag_evaluation(request: dict) -> dict:
+    """Validate and build the core operation for a flag evaluation request before it mutates rollout rule."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

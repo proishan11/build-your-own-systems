@@ -1,57 +1,57 @@
-# Exercise 005: Go Concurrency Gauntlet Integration Simulation and Operational Report
+# Exercise 005: Go Concurrency Gauntlet Integration Scenario
 
 Shared concept chapter: [pipelines-and-cancellation.md](../../../../../curriculum/concepts/go-concurrency/pipelines-and-cancellation.md)
 
 ## Concept Primer
 
-This exercise deepens **Go Concurrency Gauntlet** by adding the next implementation boundary after the starter lab. The focus is not broad feature count; it is building one mechanism that later project milestones can trust.
+This exercise is a project-specific implementation milestone for **Go Concurrency Gauntlet**. The work is centered on `run_go_concurrency_gauntlet_scenario`, not on a generic scaffold. You will implement behavior for **concurrent job** moving through **worker group** while preserving the project invariant.
 
-The implementation target is: Implement a small deterministic scenario runner that produces final state, metrics, invariant status, and violations.
+The implementation target is: Implement `run_go_concurrency_gauntlet_scenario` so Go Concurrency Gauntlet has a deterministic integration simulation with state, `goroutines_active`, failures, recoveries, and invariant reporting.
 
 ## Why This Matters
 
-A serious systems project becomes understandable when each layer has a contract. This exercise asks you to encode that contract in code and tests before adding more moving parts. That habit is what lets Staff engineers change complex systems without guessing.
+Real systems fail at their boundaries: malformed input, stale state, partial retries, and misleading metrics. This lab isolates one boundary of Go Concurrency Gauntlet and gives you tests that force the behavior to be explicit. The point is to practice the same discipline you would need before adding scale, concurrency, durability, or distribution.
 
 ## Mental Model
 
-A concurrent system is a set of lifetimes. Every producer, worker, and consumer needs a reason to start, a bounded way to make progress, and a reliable way to stop.
+Think of this component as a gate around **worker group**. A **concurrent job** arrives, the component decides whether `fan out work` is safe, and the result must be deterministic enough to replay, debug, or review later.
 
-For this milestone, draw the component as three boxes: input, owned state, and observable output. Correct code validates the input, mutates only owned state, and returns an output that explains what happened.
+The local state should be boring and inspectable. If you cannot explain how `blocked sender` is represented, the implementation is probably hiding a production failure mode.
 
 ## Core Invariant
 
-The component must preserve this contract after every operation: process apply, fail, and recover events in order, return final state without exposing internal mutable structures, record processed, failed, and recovered counts. A later milestone may add scale or distribution, but it must not weaken this invariant.
+The scenario runner must expose worker group state and goroutines_active metrics while reporting malformed events as violations instead of hiding them.
 
 ## Tiny Example
 
-Take one normal operation and one boundary operation from `tests/test_lab_005.py`. Before coding, write the expected state transition by hand. If the expected transition is hard to state in one sentence, simplify the internal representation first.
+Applying `worker group=ready`, recording `goroutines_active=3`, failing, and recovering should preserve state and produce one failure plus one recovery.
 
 ## Common Misconceptions
 
-- Passing the first happy-path assertion means the component is finished.
-- Internal state can be exposed directly because this is only a learning scaffold.
-- A retry, replay, duplicate, or malformed input can be handled later without shaping the API now.
-- Do not mistake buffering for backpressure or cancellation; blocked work still needs ownership.
+- Treating this as shape validation instead of behavior validation.
+- Letting project-specific failures collapse into one generic error path.
+- Returning nondeterministic ordering from a planner or scenario runner.
+- Exposing mutable internal state to callers and tests.
 
 ## Self-Check
 
 Before coding, answer:
 
-1. What state does this exercise introduce that exercise 001 did not need?
-2. Which branch protects the invariant before mutation?
-3. What behavior must remain deterministic for review and debugging?
-4. What would you measure or log when this component misbehaves?
+1. What state does `run_go_concurrency_gauntlet_scenario` own?
+2. Which input should be rejected before mutation?
+3. How does the test prove the invariant rather than only checking output shape?
+4. What would you log or measure if `blocked sender` happened in production?
 
 ## Goal
 
-Implement a small deterministic scenario runner that produces final state, metrics, invariant status, and violations.
+Implement `run_go_concurrency_gauntlet_scenario` so Go Concurrency Gauntlet has a deterministic integration simulation with state, `goroutines_active`, failures, recoveries, and invariant reporting.
 
 ## Concepts
 
-- goroutine lifecycle
-- channels
+- goroutine ownership
 - cancellation
 - backpressure
+- deterministic shutdown
 
 ## Files To Edit
 
@@ -61,31 +61,30 @@ Implement a small deterministic scenario runner that produces final state, metri
 
 Your implementation must:
 
-- process apply, fail, and recover events in order
-- return final state without exposing internal mutable structures
-- record processed, failed, and recovered counts
-- mark invariant violations for malformed events instead of crashing silently
+- process apply, metric, fail, and recover events in order
+- track `goroutines_active`, failures, and recoveries
+- return invariant_ok and violations
+- handle empty scenarios deterministically
 
 ## Design Hints
 
-- Keep the representation boring and explicit; clever encodings hide invariants.
-- Implement validation and idempotency before optimizing the successful path.
-- Prefer deterministic ordering for every returned list, report, or plan.
-- Make boundary behavior visible in the return value or exception type.
+- Initialize the full report shape before processing events.
+- Treat missing resources as violations, not exceptions.
+- Keep metric defaults explicit so dashboards do not infer missing data.
 
 ## Layered Hints
 
 ### Hint 1
 
-Start with the data structure that makes the invariant obvious. Most of the code should become simple conditionals over that structure.
+Start with the expected dictionaries in `test_lab_005.py`. They describe the public contract more precisely than prose.
 
 ### Hint 2
 
-Run the test file directly and implement one assertion at a time. Do not start by trying to satisfy every scenario at once.
+Implement the rejection or boundary case before the happy path. That usually reveals the invariant.
 
 ### Hint 3
 
-After the tests pass, look for accidental mutation leaks: returned dictionaries and lists should not let callers corrupt internal state.
+After the tests pass, check that repeated calls with the same input produce the same output and do not mutate caller-owned objects.
 
 ## Validation
 
@@ -98,12 +97,11 @@ python3 -m unittest discover -s tests -p test_lab_005.py
 ## Further Reading
 
 - Shared concept chapter linked at the top of this exercise.
-- Pipelines and cancellation: ../../../../../curriculum/concepts/go-concurrency/pipelines-and-cancellation.md
-- Go blog pipelines: https://go.dev/blog/pipelines
+- Go pipelines blog: https://go.dev/blog/pipelines
 
 ## Staff-Level Review Questions
 
-1. What invariant did this milestone add or strengthen?
-2. Which malformed, duplicate, stale, or partial input should be tested next?
-3. How would this implementation behave under replay or retry?
-4. What would make this component easier to debug in production?
+1. What makes this implementation specific to Go Concurrency Gauntlet, rather than a generic CRUD helper?
+2. Which failure mode does `blocked sender` represent in a real deployment?
+3. How would retries, replays, or stale state affect this boundary?
+4. What additional test would catch an operational incident before users see it?

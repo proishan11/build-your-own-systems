@@ -1,6 +1,21 @@
 import unittest
-from lab import make_batches
-class BatchTest(unittest.TestCase):
-    def test_max_size(self): self.assertEqual(make_batches([(0,'a'),(0,'b'),(0,'c')],2,10), [['a','b'],['c']])
-    def test_timeout_flush(self): self.assertEqual(make_batches([(0,'a'),(9,'b')],4,5), [['a'],['b']])
-if __name__ == '__main__': unittest.main()
+
+from lab import batch_request_inference_request
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_inference_request_request(self):
+        self.assertEqual(batch_request_inference_request({'id': 'inference-request-001', 'kind': 'batch request', 'target': 'batch queue', 'priority': 2, 'metadata': {'source': 'Inference Server', 'track': 'ml-systems'}}), {'id': 'inference-request-001', 'action': 'batch request', 'target': 'batch queue', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_inference_request_request(self):
+        self.assertEqual(batch_request_inference_request({'id': 'bad', 'kind': '', 'target': 'batch queue', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'batch queue', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'inference-request-001', 'kind': 'batch request', 'target': 'batch queue', 'priority': 2, 'metadata': {'source': 'Inference Server', 'track': 'ml-systems'}}
+        original = dict(request)
+        batch_request_inference_request(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

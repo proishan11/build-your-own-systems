@@ -30,10 +30,11 @@ The curriculum directory is the source of truth for course structure.
 Important files:
 
 - `curriculum/curriculum.json`: machine-readable manifest used by `tools/learn.py`.
-- `curriculum/catalog/project-catalog.md`: broad project catalog across systems, databases, distributed systems, AI, tooling, security, performance, and operations.
+- `curriculum/catalog/project-catalog.md`: book-style index for the project catalog.
+- `curriculum/catalog/chapters/`: catalog chapters across systems, databases, distributed systems, AI, tooling, security, performance, and operations.
 - `curriculum/concepts/`: reusable concept chapters.
 - `curriculum/projects/`: deeper project descriptions for major tracks.
-- `curriculum/roadmap/`: planning, implementation status, and scaffolding sequence.
+- `curriculum/roadmap/`: planning indexes, roadmap chapters, implementation status, and scaffolding sequence.
 - `curriculum/rubrics/staff-engineer-review.md`: review criteria.
 - `curriculum/templates/exercise-template.md`: structure for new exercises.
 - `curriculum/state/progress.json`: local progress state.
@@ -42,12 +43,12 @@ Important files:
 
 The playgrounds directory contains the code learners edit.
 
-There are two kinds of playgrounds:
+The playgrounds are organized in two groups:
 
-- first-wave deeper exercises, such as Go concurrency, MiniDB, networking, OS, and tooling foundations
-- catalog ladders under `playgrounds/catalog/`
+- foundation exercises, such as Go concurrency, MiniDB, networking, OS, and tooling foundations
+- project ladders under `playgrounds/catalog/`
 
-Catalog ladder shape:
+Project ladder shape:
 
 ```text
 playgrounds/catalog/<track>/<project>/
@@ -119,7 +120,7 @@ Catalog audit:
 python3 tools/scaffold_catalog.py
 ```
 
-Despite the name, `scaffold_catalog.py` is now conservative. It audits the generated catalog ladders rather than overwriting them.
+Despite the name, `scaffold_catalog.py` is now conservative. It audits the generated project ladders rather than overwriting them.
 
 ## `bin/` and `package.json`
 

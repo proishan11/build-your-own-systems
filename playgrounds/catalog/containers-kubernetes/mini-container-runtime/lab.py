@@ -1,12 +1,11 @@
-"""Learner implementation stub for Mini Container Runtime First Implementation Lab.
+"""Learner implementation stub for Mini Container Runtime: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `start_container_container_spec`.
 """
 
-class SpecError(Exception): pass
-def validate_spec(spec: dict, *, allow_privileged: bool = False) -> dict:
-    # TODO: Return normalized spec or raise SpecError.
+def start_container_container_spec(request: dict) -> dict:
+    """Validate and build the core operation for a container spec request before it mutates namespace plan."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

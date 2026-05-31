@@ -1,18 +1,11 @@
-"""Learner implementation stub for Virtual Memory Simulator: Operation Planner and Deterministic Diffs.
+"""Learner implementation stub for Virtual Memory Simulator: Planning and Ordering.
 
-Read exercises/003-operation-planner.md before coding. This file is
-intentionally incomplete: implement the contract and use tests/test_lab_003.py
-to validate behavior.
+Read exercises/003-operation-planner.md before coding. The tests in
+tests/test_lab_003.py define the project-specific behavior for `plan_virtual_memory_simulator_map_pages`.
 """
 
-def plan_actions(desired: dict, observed: dict) -> list[dict]:
-    """Return deterministic create/update/delete actions needed to converge observed to desired."""
-    # TODO: Compare desired and observed maps, sorted by key, and emit minimal actions.
+def plan_virtual_memory_simulator_map_pages(desired: dict, observed: dict) -> list[dict]:
+    """Plan deterministic map page operations to converge observed page table state to desired state."""
+    # TODO: Emit minimal create/update/delete actions in stable operation order.
+    # Sort by operation type priority and name so reviews and retries are deterministic.
     raise NotImplementedError
-
-
-def summarize_plan(actions: list[dict]) -> dict:
-    """Return counts by action and the total number of planned operations."""
-    # TODO: Count create/update/delete operations and include total.
-    raise NotImplementedError
-

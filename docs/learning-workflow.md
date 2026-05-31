@@ -59,7 +59,7 @@ tools/learn.py validate <exercise-id>
 
 Read the first meaningful failure. Fix one behavior at a time.
 
-For Go exercises, some validators may run `go test ./...` or race checks. For catalog exercises, validators usually run one Python test file for the current milestone.
+For Go exercises, some validators may run `go test ./...` or race checks. For project ladder exercises, validators usually run one Python test file for the current milestone.
 
 ### Pass 4: Review
 
@@ -87,7 +87,7 @@ This keeps you in the driver's seat. The goal is to build your reasoning muscles
 
 ## Choosing A Path
 
-Use the first-wave exercises when you want a curated foundation:
+Use the foundation exercises when you want a curated systems base:
 
 - `go-concurrency`
 - `database-systems`
@@ -96,7 +96,7 @@ Use the first-wave exercises when you want a curated foundation:
 - `tooling-foundations`
 - `os-kernel-labs`
 
-Use catalog ladders when you want breadth or a specific domain:
+Use project ladders when you want breadth or a specific domain:
 
 - LLM engineering
 - RAG and agents
@@ -135,4 +135,3 @@ Command:
 ```bash
 tools/learn.py complete <exercise-id>
 ```
-

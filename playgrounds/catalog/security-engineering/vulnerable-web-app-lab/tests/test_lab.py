@@ -1,7 +1,21 @@
 import unittest
-from lab import can_read, denied_event
-class AuthzTest(unittest.TestCase):
-    def test_owner(self): self.assertTrue(can_read({'id':'u1','role':'user'}, {'owner':'u1'}))
-    def test_admin(self): self.assertTrue(can_read({'id':'a','role':'admin'}, {'owner':'u1'}))
-    def test_denied(self): self.assertFalse(can_read({'id':'u2','role':'user'}, {'owner':'u1'})); self.assertEqual(denied_event({'id':'u2'}, {'owner':'u1'})['actor'], 'u2')
-if __name__ == '__main__': unittest.main()
+
+from lab import sanitize_request_http_input
+
+
+class CoreMechanismTest(unittest.TestCase):
+    def test_builds_valid_http_input_request(self):
+        self.assertEqual(sanitize_request_http_input({'id': 'http-input-001', 'kind': 'sanitize request', 'target': 'security policy', 'priority': 2, 'metadata': {'source': 'Vulnerable Web App Lab', 'track': 'security-engineering'}}), {'id': 'http-input-001', 'action': 'sanitize request', 'target': 'security policy', 'priority': 2, 'accepted': True})
+
+    def test_rejects_malformed_http_input_request(self):
+        self.assertEqual(sanitize_request_http_input({'id': 'bad', 'kind': '', 'target': 'security policy', 'priority': -1, 'metadata': {}}), {'id': 'bad', 'action': 'reject', 'target': 'security policy', 'reason': 'invalid request'})
+
+    def test_does_not_mutate_input(self):
+        request = {'id': 'http-input-001', 'kind': 'sanitize request', 'target': 'security policy', 'priority': 2, 'metadata': {'source': 'Vulnerable Web App Lab', 'track': 'security-engineering'}}
+        original = dict(request)
+        sanitize_request_http_input(request)
+        self.assertEqual(request, original)
+
+
+if __name__ == "__main__":
+    unittest.main()

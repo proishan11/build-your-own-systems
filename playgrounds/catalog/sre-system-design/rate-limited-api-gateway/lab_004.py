@@ -1,22 +1,11 @@
-"""Learner implementation stub for Rate-Limited API Gateway: Failure, Retry, and Recovery Boundary.
+"""Learner implementation stub for Rate-Limited API Gateway: Failure and Recovery.
 
-Read exercises/004-failure-recovery.md before coding. This file is
-intentionally incomplete: implement the contract and use tests/test_lab_004.py
-to validate behavior.
+Read exercises/004-failure-recovery.md before coding. The tests in
+tests/test_lab_004.py define the project-specific behavior for `recover_rate_limited_api_gateway_limit_bypass`.
 """
 
-class RetryPolicy:
-    def __init__(self, max_attempts: int, retryable_errors: set[str]):
-        # TODO: Store retry budget, retryable error names, attempts by operation, and completed IDs.
-        pass
-
-    def record_failure(self, operation_id: str, error: str) -> dict:
-        """Return a retry/fail/give_up decision for a failed operation."""
-        # TODO: Make retry decisions idempotent and budget-aware.
-        raise NotImplementedError
-
-    def record_success(self, operation_id: str) -> dict:
-        """Mark an operation complete and return a success decision."""
-        # TODO: Mark success so later duplicate failures cannot reopen the operation.
-        raise NotImplementedError
-
+def recover_rate_limited_api_gateway_limit_bypass(failure_report: dict) -> dict:
+    """Classify recovery behavior for limit bypass while protecting token bucket."""
+    # TODO: Retry transient timeout/unavailable failures while budget remains,
+    # fail permanent domain failures, and give up when the retry budget is exhausted.
+    raise NotImplementedError

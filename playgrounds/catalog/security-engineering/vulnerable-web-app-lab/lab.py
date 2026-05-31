@@ -1,14 +1,11 @@
-"""Learner implementation stub for Vulnerable Web App Lab First Implementation Lab.
+"""Learner implementation stub for Vulnerable Web App Lab: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `sanitize_request_http_input`.
 """
 
-def can_read(actor: dict, record: dict) -> bool:
-    # TODO
-    raise NotImplementedError
-def denied_event(actor: dict, record: dict) -> dict:
-    # TODO
+def sanitize_request_http_input(request: dict) -> dict:
+    """Validate and build the core operation for an HTTP input request before it mutates security policy."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError

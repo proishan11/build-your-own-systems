@@ -1,11 +1,11 @@
-"""Learner implementation stub for Stream Processor First Implementation Lab.
+"""Learner implementation stub for Stream Processor: Core Mechanism.
 
-Read exercises/001-project-kickoff.md before coding. Keep the solution
-small, deterministic, and focused on the contract tested by tests/test_lab.py.
-The placeholder raises NotImplementedError so validation fails for the intended
-learning reason until you implement the behavior.
+Read exercises/001-project-kickoff.md before coding. The tests in
+tests/test_lab.py define the project-specific behavior for `advance_watermark_stream_event`.
 """
 
-def aggregate(events: list[tuple[int, str, int]], window_size: int) -> dict[tuple[int,str], int]:
-    # TODO: Map (window_start,key)->sum(value).
+def advance_watermark_stream_event(request: dict) -> dict:
+    """Validate and build the core operation for a stream event request before it mutates watermark state."""
+    # TODO: Validate required fields, build the domain operation, preserve priority,
+    # and reject malformed requests before they can mutate project state.
     raise NotImplementedError
