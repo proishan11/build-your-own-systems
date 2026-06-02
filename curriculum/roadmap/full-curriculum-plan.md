@@ -2,6 +2,8 @@
 
 This plan turns the project catalog into a coherent learning path. The goal is not to finish every project. The goal is to build enough serious systems that the learner develops Staff-level instincts: invariants, failure modes, debugging, operations, and tradeoffs.
 
+For the learner-facing path, start with [Self-Contained Learning Plan](../learning-plan.md). This roadmap is the maintainer-oriented planning companion.
+
 The detailed plan is split into roadmap chapters so the curriculum can be read like a book and maintained without one giant document.
 
 ## Roadmap Chapters

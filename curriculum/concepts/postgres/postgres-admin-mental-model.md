@@ -1,4 +1,4 @@
-# PostgreSQL Administration Mental Model
+# Administration Mental Model
 
 ## What You Should Know First
 
@@ -36,6 +36,20 @@ Think of PostgreSQL as four connected systems:
 
 Most incidents become clearer when you identify which system is under stress.
 
+## How It Works Step By Step
+
+PostgreSQL administration is a loop of observing symptoms, mapping them to subsystems, and proving recovery or improvement.
+
+| Subsystem | What To Inspect | Why It Matters |
+| --- | --- | --- |
+| WAL and checkpoints | WAL rate, archive status, checkpoint frequency. | Determines crash recovery and replication pressure. |
+| MVCC and vacuum | Dead tuples, long transactions, autovacuum activity. | Determines bloat and visibility cleanup. |
+| Planner and executor | `EXPLAIN`, statistics, indexes, row estimates. | Determines query shape and latency. |
+| Locks and waits | Wait events, blocking sessions, transaction age. | Determines stalls and operational risk. |
+| Replication and backup | Lag, slots, base backups, restore tests. | Determines data-loss and recovery posture. |
+
+The administrative move is to turn "Postgres is slow" into one of these concrete subsystem questions.
+
 ## Core Invariant
 
 A production database should have a tested path to recover committed data to an explicit recovery objective.
@@ -54,6 +68,19 @@ A dashboard shows replication lag climbing.
 | Are backups or archives healthy? | Recovery options depend on WAL availability. |
 
 The right response depends on the subsystem, not on the generic label "database is slow."
+
+## State Or Flow Walkthrough
+
+A team reports that writes are failing and disk is nearly full.
+
+| Observation | Interpretation |
+| --- | --- |
+| WAL directory is growing | WAL is being retained faster than it is recycled. |
+| A replication slot is inactive | PostgreSQL keeps WAL for a consumer that is not advancing. |
+| Backups are stale | Deleting WAL blindly may destroy recovery ability. |
+| Primary still accepts writes | Immediate risk is disk exhaustion and shutdown. |
+
+A good response checks backup status, replica status, slot lag, and recovery requirements before removing anything. Administration is operational reasoning under constraints.
 
 ## Implementation Shape
 
@@ -81,9 +108,28 @@ The lesson is operational: every claim should be backed by a command, metric, or
 | Unbounded connections | Memory and scheduling collapse. |
 | Manual failover confusion | Split brain or data loss. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| Backup and PITR lab | Base backups, WAL archive, restore validation, and recovery target. |
+| Query performance lab | Plans, statistics, indexes, row estimates, and before/after evidence. |
+| Replication and failover lab | Slots, lag, promotion, split-brain risk, and client reconnection. |
+| PostgreSQL backup operator | Reconciliation plus database recovery semantics. |
+
 ## Exercise Bridge
 
 PostgreSQL labs should teach backup/PITR, query performance, replication/failover, and operational dashboards. Before implementing, write the recovery objective or performance objective in concrete terms.
+
+## Readiness Checklist
+
+You are ready for PostgreSQL admin exercises when you can:
+
+- explain how WAL supports crash recovery and PITR
+- prove a backup by restoring it
+- read the difference between estimated and actual rows in a plan
+- identify why long transactions block cleanup
+- name the metric that would warn about WAL retention risk
 
 ## Self-Check
 

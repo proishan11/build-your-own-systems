@@ -1,4 +1,4 @@
-# LLM Evals, Traces, and Guardrails
+# Evals, Traces, and Guardrails
 
 ## What You Should Know First
 
@@ -32,6 +32,22 @@ input -> prompt -> retrieval/tools -> model -> parser/checks -> user-visible res
 
 If the final result is wrong, you need enough trace data to know whether the issue came from retrieval, prompt design, tool output, model behavior, parsing, or policy.
 
+## How It Works Step By Step
+
+An LLM engineering loop should make model behavior inspectable and comparable.
+
+| Step | Artifact | Purpose |
+| --- | --- | --- |
+| Define task | Task contract and risk level. | Clarifies what good output means. |
+| Build eval set | Inputs, expected behavior, slices, and metadata. | Makes comparison repeatable. |
+| Run system | Model, prompt, retrieval, tools, parser. | Produces outputs under controlled configuration. |
+| Capture trace | Prompt, context, tool calls, timings, costs, outputs. | Makes failures debuggable. |
+| Grade | Exact checks, rubric, model judge, or human review. | Converts behavior into evidence. |
+| Compare baseline | New run versus previous run. | Detects regressions and tradeoffs. |
+| Gate release | Thresholds for quality, safety, cost, or latency. | Prevents accidental degradation. |
+
+The goal is not perfect measurement. The goal is disciplined measurement that gets better as failures teach you what to add.
+
 ## Core Invariant
 
 Quality claims should be backed by reproducible examples, structured traces, and explicit grading criteria.
@@ -51,6 +67,20 @@ A structured-output assistant must return JSON for support ticket classification
 | Regression comparison | Did the new prompt improve one class while harming another? |
 
 One failing example is not only a bug. It is also a new candidate for the eval set.
+
+## State Or Flow Walkthrough
+
+A support classifier returns JSON with `category`, `priority`, and `rationale`.
+
+| Failure | Which Layer Catches It |
+| --- | --- |
+| Invalid JSON | Schema validator. |
+| Wrong category | Eval grader against expected label. |
+| Unsupported rationale | Groundedness or citation check. |
+| Unsafe recommendation | Guardrail or policy check. |
+| Slow or expensive response | Trace and metrics comparison. |
+
+One example can fail several layers. Keeping those layers separate tells you whether to fix the prompt, retrieval, tool behavior, parser, or policy.
 
 ## Implementation Shape
 
@@ -78,9 +108,29 @@ The right grader depends on the task. Exact matching is useful for JSON shape, b
 | Guardrails without logging | Rejections cannot improve the product or policy. |
 | No baseline | Teams cannot tell whether a change helped. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| Structured output validator | Schema checks, parser behavior, and repair boundaries. |
+| LLM trace store | Durable trace records and debugging fields. |
+| LLM evals harness | Datasets, runners, graders, and regression reports. |
+| Model router | Cost, latency, quality, and fallback tradeoffs. |
+| Human approval workflow | Guardrails around risky model-suggested actions. |
+
 ## Exercise Bridge
 
 LLM engineering exercises should ask you to build structured output validation, trace storage, eval runners, model routing, cost dashboards, and approval workflows. Before coding, decide which failures are correctness bugs, which are policy violations, and which are quality regressions.
+
+## Readiness Checklist
+
+You are ready for LLM engineering exercises when you can:
+
+- define what one eval case proves
+- identify high-risk slices separately from aggregate score
+- reproduce a bad output from trace data
+- explain which guardrails run before tool execution
+- name the threshold that would block a rollout
 
 ## Self-Check
 

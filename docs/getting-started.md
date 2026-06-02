@@ -20,6 +20,10 @@ Useful as you enter specific tracks:
 
 Most project ladder exercises use Python-only stubs so you can start immediately.
 
+## The Learning Plan
+
+Read [Self-Contained Learning Plan](../curriculum/learning-plan.md) when you want the full path. It explains the phase order, the concept chapters to read, representative exercises, and the evidence you should produce before moving on.
+
 ## First Five Minutes
 
 From the repo root:

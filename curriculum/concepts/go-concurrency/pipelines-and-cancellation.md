@@ -42,6 +42,21 @@ When producing output, the worker must choose again:
 
 One coordinator waits until all workers are done, then closes the output channel exactly once.
 
+## How It Works Step By Step
+
+A cancellable pipeline is a lifecycle protocol, not just a few goroutines.
+
+| Step | Mechanism | Rule |
+| --- | --- | --- |
+| Validate inputs | Check worker count, nil function, or options. | Reject invalid configurations before starting goroutines. |
+| Start workers | Launch a fixed number of goroutines. | Each worker must have a clear stop condition. |
+| Receive work | Select on input and cancellation. | A canceled caller no longer needs more work. |
+| Produce output | Select on output send and cancellation. | Do not block forever if downstream stopped reading. |
+| Track lifecycle | Use a wait group or equivalent. | The closer must know when all sends are impossible. |
+| Close output | One coordinator closes after all workers exit. | Multiple closers or early close can panic. |
+
+The worker pool and bounded queue exercises are variations on the same lesson: ownership and wakeup rules matter more than the syntax of channels.
+
 ## Core Invariant
 
 The output channel is closed exactly once, and only after all goroutines that might send to it have stopped sending.
@@ -61,6 +76,33 @@ Suppose `Map(ctx, in, square, workers=2)` receives `1, 2, 3`.
 | All workers exit | The coordinator closes the output channel. |
 
 If the caller cancels after one result, fewer outputs are acceptable. Cancellation means the caller has withdrawn interest in the remaining work.
+
+## State Or Flow Walkthrough
+
+A healthy fan-out/fan-in run looks like this:
+
+```text
+t0 caller creates ctx and input channel
+t1 coordinator starts workers
+t2 workers receive input values
+t3 workers compute and send results
+t4 input channel closes
+t5 workers drain or exit
+t6 coordinator observes all workers done
+t7 coordinator closes output
+```
+
+A cancellation path is different:
+
+```text
+t0 caller cancels ctx
+t1 blocked receivers wake through ctx.Done
+t2 blocked senders choose cancellation instead of output send
+t3 workers return without sending more results
+t4 coordinator closes output after workers exit
+```
+
+If a worker sends without selecting on cancellation, `t2` can get stuck forever.
 
 ## Implementation Shape
 
@@ -86,9 +128,28 @@ The worker usually needs two `select` statements: one around receiving input and
 | Sleep-based tests | Tests guess timing instead of observing state. | Use channels, deadlines, and race/leak checks. |
 | Accidental ordering promise | Tests assume output order from concurrent workers. | Document whether order is guaranteed. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `go-concurrency/001-cancellable-fanout-fanin` | Worker lifecycle, output ownership, and cancellation-aware sends. |
+| `go-concurrency/002-bounded-queue` | Backpressure, blocked producers, blocked consumers, close semantics, and wakeups. |
+| `go-concurrency/003-worker-pool` | Fixed worker budget, bounded job queue, futures, shutdown, and panic handling. |
+| Go concurrency project ladder | Reuses the same lifecycle reasoning across crawlers, actors, brokers, and MapReduce. |
+
 ## Exercise Bridge
 
 This concept appears in the Go Concurrency Gauntlet and in project ladders that use worker pools, crawlers, MapReduce workers, stream processors, or bounded queues. Before implementing, identify who owns every channel and what happens when the caller stops reading.
+
+## Readiness Checklist
+
+You are ready to implement concurrency exercises when you can:
+
+- identify which goroutine owns closing each channel
+- explain what wakes a blocked producer or consumer
+- show what happens if downstream stops reading
+- distinguish race freedom from leak freedom
+- design a test that does not rely on arbitrary sleeps
 
 ## Self-Check
 

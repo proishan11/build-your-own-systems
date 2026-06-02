@@ -33,6 +33,21 @@ Think of a WAL as a numbered notebook:
 
 The in-memory index is convenient, but the notebook is the source that survives a crash. On restart, the system scans the notebook and rebuilds or repairs state.
 
+## How It Works Step By Step
+
+A WAL moves the hard part of recovery into a simple ordered file.
+
+| Step | Responsibility | Recovery Meaning |
+| --- | --- | --- |
+| Describe change | Serialize enough information to redo or undo the operation. | Recovery can understand intent. |
+| Append record | Add the record at the next log position. | The operation has an ordered place in history. |
+| Force durability | Cross the configured durability boundary. | The system can rely on the record after restart. |
+| Mutate derived state | Update pages, indexes, caches, or memory. | These can be repaired from the log. |
+| Acknowledge caller | Return success only after the promise is true. | Client-visible success matches recoverable state. |
+| Replay after crash | Scan valid records and rebuild or repair state. | Partial work becomes deterministic. |
+
+The log does not eliminate complexity. It gives complexity a safe order.
+
 ## Core Invariant
 
 The system must not expose or depend on a change unless the log record needed to recover that change has crossed the required durability boundary.
@@ -52,6 +67,20 @@ Imagine a key-value store with `Put("x", "alpha")`.
 | Return success | Only now tell the caller that the write succeeded. |
 
 After restart, key `x` should either recover as `"alpha"` or the append should be reported as not durable. Returning different bytes is silent corruption.
+
+## State Or Flow Walkthrough
+
+Consider `Put("x", "alpha")`.
+
+| Crash Point | Recovery Result |
+| --- | --- |
+| Before log append | No durable record exists; `x` need not exist. |
+| During log append | Scanner sees torn tail and ignores or reports it according to policy. |
+| After log sync, before index update | Replay sees the record and restores `x = alpha`. |
+| After index update, before response | Replay still restores `x = alpha`; duplicate replay must be safe. |
+| After response | The committed write must survive restart. |
+
+This timeline is the reason write-ahead means "log first, derived state second."
 
 ## Implementation Shape
 
@@ -77,9 +106,28 @@ Append-only design is powerful because it turns random mutation into sequential 
 | Non-idempotent replay | Recovery can duplicate effects after a partial crash. |
 | Ambiguous durability | Callers cannot reason about what survives restart. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `database/001-wal-record-format` | Record framing and recoverable append semantics. |
+| `distributed/001-local-durable-log` | Stable indexes, append/read contracts, and restart behavior. |
+| MiniDB storage exercises | Page updates, checkpoints, replay, and crash recovery. |
+| Raft replicated log | Uses WAL discipline as the local persistence layer for consensus. |
+
 ## Exercise Bridge
 
 This concept powers the WAL record format, MiniDB storage engine, replicated WAL, queues, event stores, stream processors, and Raft logs. When you open an exercise, first identify the durable boundary and the replay rule.
+
+## Readiness Checklist
+
+You are ready to implement WAL exercises when you can:
+
+- name the durability boundary for append success
+- explain what can be rebuilt from log records
+- handle a partial final record without inventing data
+- make replay idempotent
+- distinguish source-of-truth state from derived indexes
 
 ## Self-Check
 

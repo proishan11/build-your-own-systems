@@ -33,6 +33,21 @@ Think of each record as a small envelope:
 
 Recovery reads one envelope at a time. If the header is incomplete, the tail is ignored. If the payload is incomplete or checksum fails, recovery stops or reports corruption according to the storage contract.
 
+## How It Works Step By Step
+
+A record format makes recovery boring by removing guesswork.
+
+| Step | What The Writer Does | What The Reader Later Does |
+| --- | --- | --- |
+| Choose version | Writes a known format version or magic. | Rejects unsupported formats explicitly. |
+| Encode type | Names the operation kind. | Dispatches to the right decoder. |
+| Encode length | Records exact payload size. | Reads exactly that many bytes. |
+| Encode payload | Stores operation-specific fields. | Parses fields without scanning beyond the record. |
+| Encode checksum | Covers the bytes that must not change. | Detects torn writes or corruption. |
+| Append sequentially | Places the record after previous records. | Scans forward until EOF, torn tail, or corruption. |
+
+A good format lets the reader answer: complete, incomplete, corrupt, or valid. It should not need vibes.
+
 ## Core Invariant
 
 A reader must never silently accept bytes as a different valid operation than the writer intended.
@@ -52,6 +67,18 @@ Suppose the system encodes `PUT key=cat value=gray`.
 | Payload | encoded key and value |
 
 During recovery, the scanner reads the header, reads exactly `length` payload bytes, recomputes the checksum, then yields a typed record to the replay layer.
+
+## State Or Flow Walkthrough
+
+A small `PUT` record might be laid out like this:
+
+```text
+magic(4) version(1) type(1) length(4) checksum(4) payload(length)
+```
+
+The scanner reads fixed header bytes first. If there are not enough header bytes, it has reached an incomplete tail. If the header is present, it reads `length` payload bytes. If those bytes are missing, the record is torn. If the checksum does not match, the record is corrupt.
+
+Those cases should not collapse into one generic parse failure; recovery policy depends on the difference.
 
 ## Implementation Shape
 
@@ -76,9 +103,27 @@ This separation keeps storage bugs easier to inspect. The decoder should not mut
 | No version | Format migration becomes guesswork. | Include version or magic bytes. |
 | Parser accepts trailing junk | Corruption hides until later. | Validate exact lengths. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `database/001-wal-record-format` | Encoding, decoding, checksums, type tags, and malformed-record rejection. |
+| Storage engine project ladders | Versioned record evolution and scanner behavior. |
+| Recovery exercises | Torn-tail handling, corruption detection, and replay boundaries. |
+
 ## Exercise Bridge
 
 WAL format exercises usually ask you to encode, decode, scan, and reject malformed records. Treat tests that corrupt bytes as design feedback: they are asking whether your format makes recovery unambiguous.
+
+## Readiness Checklist
+
+You are ready to implement WAL record formats when you can:
+
+- draw the exact bytes in one record
+- explain how the reader finds the next record
+- identify which bytes the checksum covers
+- distinguish EOF, torn tail, and corruption
+- describe how the format can evolve safely
 
 ## Self-Check
 

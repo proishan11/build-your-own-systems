@@ -34,6 +34,22 @@ client -> leader -> followers
 
 The leader can propose entries. Followers copy them if the new entries are consistent with their previous log. Once a quorum has an entry under Raft's commit rules, the entry is committed and can be applied to the state machine.
 
+## How It Works Step By Step
+
+Raft splits consensus into a small set of repeated procedures.
+
+| Procedure | What Happens | Safety Role |
+| --- | --- | --- |
+| Follower waits | A node remains passive while hearing from a leader. | Avoids unnecessary elections. |
+| Election timeout fires | The follower becomes candidate and increments term. | Terms create a monotonic epoch system. |
+| Candidate requests votes | Peers grant at most one vote per term if the candidate log is fresh enough. | Prevents two leaders in one term and protects committed logs. |
+| Leader appends entries | Client commands are added to the leader log. | Creates one proposed order. |
+| Followers validate prefix | AppendEntries includes previous index and term. | Prevents incompatible histories from being spliced together. |
+| Quorum replicates | Leader advances commit index when rules are satisfied. | Majority intersection protects committed entries. |
+| State machine applies | Nodes apply committed entries in order. | Clients see deterministic state transitions. |
+
+The algorithm is not magic. It is a careful combination of monotonic terms, one-vote-per-term, log freshness checks, and majority overlap.
+
 ## Core Invariant
 
 If a log entry is committed at index `i`, every future leader must contain that same entry at index `i`.
@@ -53,6 +69,23 @@ In a five-node cluster, leader `A` appends command `set x=1` at index `7`.
 | `A` crashes | Any future leader elected by a majority must be compatible with committed history. |
 
 Uncommitted entries are different. They may be overwritten by a later leader if they did not reach the safety boundary.
+
+## State Or Flow Walkthrough
+
+A five-node cluster starts with all nodes in term 3. Leader `A` stops sending heartbeats.
+
+```text
+t0 followers wait
+t1 B times out, term becomes 4, B votes for itself
+t2 B sends RequestVote(term=4, lastLogIndex, lastLogTerm)
+t3 C and D grant votes because they have not voted and B's log is fresh
+t4 B has 3/5 votes and becomes leader
+t5 B sends AppendEntries heartbeats
+t6 client command arrives; B appends it and replicates to followers
+t7 entry reaches B, C, D; B advances commit index
+```
+
+If old leader `A` comes back, its term is stale. Followers reject its messages and force it to step down. This is why every RPC carries a term.
 
 ## Implementation Shape
 
@@ -79,9 +112,27 @@ The local durable log is not an implementation detail. It is part of the consens
 | Applying uncommitted entries | Clients can observe state that later disappears. |
 | Treating timeout as fact | A node may be slow or partitioned, not dead. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `distributed/001-local-durable-log` | Persistent ordered entries and stable indexes. |
+| Replicated WAL project ladder | Leader election, AppendEntries, quorum commit, snapshots, and membership changes. |
+| Stream and queue projects | Replicated logs, committed offsets, replay, and exactly-once tradeoffs. |
+
 ## Exercise Bridge
 
 The replicated WAL project starts with a local durable log, then adds replication, terms, quorum commit, snapshots, and membership. Before writing code, name which state is volatile, which state is persistent, and which message proves quorum intersection.
+
+## Readiness Checklist
+
+You are ready to implement Raft exercises when you can:
+
+- explain why every RPC includes a term
+- show how one-vote-per-term prevents split leadership in a term
+- describe the log freshness check during RequestVote
+- explain how AppendEntries repairs conflicting suffixes
+- distinguish accepted, replicated, committed, and applied entries
 
 ## Self-Check
 

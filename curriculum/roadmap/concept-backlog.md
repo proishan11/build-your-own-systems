@@ -1,6 +1,6 @@
 # Concept Backlog
 
-This backlog lists self-contained concept chapters to add under `curriculum/concepts/`.
+This backlog is the source list that drove the first concept-library expansion. Initial coverage is tracked in `concept-bookification-plan.md`; future reusable concepts should be added here before the next 15-concept iteration.
 
 ## Highest Priority
 

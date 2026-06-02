@@ -34,6 +34,20 @@ commit -> tree -> blobs
 
 A branch is not the history itself. It is a movable pointer to a commit. The history is recovered by walking parent links.
 
+## How It Works Step By Step
+
+A commit is the visible unit in everyday Git, but it is assembled from smaller immutable objects.
+
+| Step | Object Created Or Updated | What It Represents |
+| --- | --- | --- |
+| Store file bytes | Blob | File contents without filename. |
+| Build directory snapshot | Tree | Names, modes, and child object IDs. |
+| Record history | Commit | Tree pointer, parent commit IDs, author, and message. |
+| Move branch | Ref update | Human-readable name now points at the new commit. |
+| Update working state | Index and working tree | The next staged snapshot and editable files. |
+
+The object database is mostly immutable. Refs are mutable pointers. Many Git surprises become easier when you separate those two facts.
+
 ## Core Invariant
 
 An object ID must name exactly the content used to compute it.
@@ -51,6 +65,26 @@ README.md = "hello"
 Git stores the file contents as a blob. A tree maps `README.md` to that blob. A commit points to the tree and to its parent commit, if any. The branch `main` points to the latest commit.
 
 When you edit `README.md` and commit again, Git creates a new blob for the new contents, a new tree for the new snapshot, and a new commit pointing to the previous commit.
+
+## State Or Flow Walkthrough
+
+Start with one commit:
+
+```text
+main -> C1 -> T1 -> B_readme
+```
+
+Edit `README.md` and commit again:
+
+```text
+main -> C2 -> T2 -> B_readme_v2
+        |
+        parent -> C1
+```
+
+The branch did not contain the files. The branch moved from `C1` to `C2`. The new commit points to a new tree, and the tree points to blobs. If another file did not change, the new tree can still point at the old blob.
+
+This is why Git can make branching cheap: creating a branch is usually just creating another ref pointing at an existing commit.
 
 ## Implementation Shape
 
@@ -77,9 +111,29 @@ Keep object storage separate from working-tree status. The object database is im
 | Updating refs unsafely | Crashes can lose branch tips. |
 | Ignoring modes | Executable bits and tree entries become inaccurate. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `tooling/002-git-object-explorer` | Reading raw objects, decoding type/length headers, and walking blob/tree/commit links. |
+| Mini Git project ladder | Object encoding, tree construction, commit writing, and ref updates. |
+| Git merge and rebase lab | Parent links, merge bases, rewritten commits, and ref movement. |
+
+When solving Git exercises, draw the graph before changing code. Most implementation errors are graph errors wearing command-line clothes.
+
 ## Exercise Bridge
 
 Git exercises use this concept for object exploration, mini-Git storage, merge-base, rebasing, and conflict reasoning. Before implementing, draw the object graph for the case you are testing.
+
+## Readiness Checklist
+
+You are ready to implement a Git object exercise when you can:
+
+- explain why blobs do not store filenames
+- distinguish immutable objects from mutable refs
+- draw a commit with its tree and parent links
+- describe what moves when `main` advances
+- explain how two branches can share most objects
 
 ## Self-Check
 

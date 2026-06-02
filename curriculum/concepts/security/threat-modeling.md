@@ -34,6 +34,22 @@ user -> API -> service -> database
 
 Then mark trust boundaries. Every boundary is a place where validation, authentication, authorization, logging, rate limiting, or isolation may be needed.
 
+## How It Works Step By Step
+
+Threat modeling is a structured design review, not a separate security ceremony.
+
+| Step | Question | Output |
+| --- | --- | --- |
+| Scope | What are we analyzing? | System boundary and assumptions. |
+| Identify assets | What would hurt if lost, changed, or exposed? | Data, capabilities, availability, money, reputation. |
+| Identify actors | Who can interact with the system? | Users, services, operators, attackers, AI tools. |
+| Draw flows | Where does data and authority move? | Diagram with trust boundaries. |
+| Find threats | What can go wrong at each boundary? | Abuse cases or STRIDE entries. |
+| Choose mitigations | What reduces likelihood or impact? | Authz, validation, isolation, logging, limits. |
+| Verify | How do we know the mitigation works? | Tests, alerts, audit logs, review checks. |
+
+A threat model that does not produce engineering work is usually just documentation theater.
+
 ## Core Invariant
 
 No actor should gain more authority, data access, or ability to cause damage than the design explicitly grants.
@@ -52,6 +68,17 @@ An agent can read documents and create support tickets.
 | What if the model is tricked? | Enforce policy outside the model. |
 
 The prompt can help, but the system boundary should not depend only on prompt obedience.
+
+## State Or Flow Walkthrough
+
+A document-search agent reads internal documents and can open support tickets.
+
+```text
+user prompt -> model -> retrieval tool -> retrieved document text
+                       -> ticket creation tool -> external system
+```
+
+Trust boundaries appear between user input and model, retrieved documents and instructions, model output and tool execution, and tool execution and external state. Each boundary needs a policy. For example, retrieved text can be evidence, but it should not be allowed to grant new tool permissions.
 
 ## Implementation Shape
 
@@ -78,9 +105,28 @@ Good threat models become engineering work. If nothing changes after the model, 
 | Prompt-only safety | Model behavior becomes the security boundary. |
 | Ignoring availability | Attackers can harm users without stealing data. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| Vulnerable web app lab | Input validation, authz mistakes, exploit thinking, and mitigation tests. |
+| Auth and session system | Identity, session lifetime, privilege, and replay risk. |
+| Secrets manager | Key boundaries, audit trails, rotation, and least privilege. |
+| Agent security lab | Prompt injection, tool authority, sandboxing, and approval gates. |
+
 ## Exercise Bridge
 
 Security exercises should force you to identify assets, model trust boundaries, exploit vulnerable behavior, and implement mitigations. Agent security labs should treat tools, retrieval, prompts, and sandboxes as separate boundaries.
+
+## Readiness Checklist
+
+You are ready for security exercises when you can:
+
+- list the assets the system protects
+- mark every trust boundary in a small diagram
+- distinguish authentication from authorization
+- name one abuse case per boundary
+- describe a mitigation enforced by code, not just policy text
 
 ## Self-Check
 

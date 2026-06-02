@@ -30,6 +30,7 @@ The curriculum directory is the source of truth for course structure.
 Important files:
 
 - `curriculum/curriculum.json`: machine-readable manifest used by `tools/learn.py`.
+- `curriculum/learning-plan.md`: learner-facing self-contained path through concepts, exercises, and review checkpoints.
 - `curriculum/catalog/project-catalog.md`: book-style index for the project catalog.
 - `curriculum/catalog/chapters/`: catalog chapters across systems, databases, distributed systems, AI, tooling, security, performance, and operations.
 - `curriculum/concepts/`: self-contained concept chapters that teach the idea before implementation.

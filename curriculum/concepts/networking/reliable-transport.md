@@ -33,6 +33,21 @@ receiver ledger: received, buffered, delivered
 
 The sender advances when it receives acknowledgements. The receiver delivers data to the application only when the next expected sequence is available.
 
+## How It Works Step By Step
+
+Reliable transport turns an unreliable packet service into an ordered stream or message sequence.
+
+| Step | Sender Responsibility | Receiver Responsibility |
+| --- | --- | --- |
+| Number data | Assign sequence numbers before sending. | Use sequence numbers to place data. |
+| Buffer in flight | Keep sent data until acknowledged. | Buffer out-of-order data. |
+| Acknowledge | Process ACKs and slide send window. | Send ACKs that describe received progress. |
+| Retransmit | Retry when delivery is uncertain. | Drop duplicates without delivering twice. |
+| Apply flow control | Respect receiver capacity. | Advertise available buffer space. |
+| Apply congestion control | Avoid overwhelming the network. | Provide signals through ACK timing/loss. |
+
+The protocol is mostly bookkeeping. The tricky part is making every ambiguous event explicit: lost data, lost ACK, delayed ACK, duplicate data, or reordered data.
+
 ## Core Invariant
 
 The receiver must deliver each byte to the application at most once and in stream order.
@@ -50,6 +65,19 @@ Suppose the sender transmits packets `1`, `2`, and `3`, but the network delivers
 | ACK sent | Receiver can acknowledge what it has or what it expects next, depending on protocol design. |
 | Packet `2` arrives | Deliver `2`, then deliver buffered `3`. |
 | Duplicate `2` arrives | Drop it or acknowledge again; do not deliver twice. |
+
+## State Or Flow Walkthrough
+
+Suppose packets carry one byte each and the receiver expects byte `4` next.
+
+```text
+arrives: seq=4  -> deliver 4, expect 5
+arrives: seq=6  -> buffer 6, still expect 5
+arrives: seq=5  -> deliver 5, then deliver buffered 6, expect 7
+arrives: seq=5  -> duplicate, acknowledge/drop, do not deliver
+```
+
+This is the core of reliable delivery: the network can be messy, but the application receives a clean ordered stream.
 
 ## Implementation Shape
 
@@ -77,9 +105,27 @@ Keep protocol state explicit. If the only state is "last packet sent," reorderin
 | Confusing flow and congestion control | Receiver capacity and network capacity become tangled. |
 | No sequence wrap plan | Long-running streams eventually collide with old sequence space. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `networking/001-reliable-transport` | Sequence numbers, ordered delivery, duplicate suppression, and retransmission hooks. |
+| Deep networking transport ladders | Sliding windows, timers, flow control, congestion intuition, and QUIC-like streams. |
+| Stream-processing projects | Offsets, replay, and exactly-once discussions reuse the same ordered-log instincts. |
+
 ## Exercise Bridge
 
 Reliable transport exercises typically start with ordered delivery, then add ACKs, retransmission, windows, and loss simulation. Before coding, decide whether your sequence numbers count packets or bytes and what acknowledgement means.
+
+## Readiness Checklist
+
+You are ready to implement reliable transport when you can:
+
+- say whether sequence numbers count bytes or packets
+- define exactly what an ACK means
+- explain where out-of-order data waits
+- show why duplicates must not be delivered twice
+- describe when the sender retransmits and why that timeout is uncertain
 
 ## Self-Check
 

@@ -32,6 +32,22 @@ desired temperature -> observe room -> heat or cool -> observe again
 
 It does not assume one action fixes the world permanently. It keeps checking. If an action fails, it records enough state to try again safely.
 
+## How It Works Step By Step
+
+A controller turns a desired-state API into repeated repair work.
+
+| Step | Controller Question | Typical Output |
+| --- | --- | --- |
+| Watch | Which object changed or needs retry? | A key enters the work queue. |
+| Fetch | Does the object still exist? | Current desired state or deletion path. |
+| Observe | What child resources or external resources exist? | Observed state snapshot. |
+| Diff | What is missing, extra, or stale? | A small operation plan. |
+| Act | Which idempotent action should run now? | Create, patch, delete, or external API call. |
+| Record status | What did the controller learn? | Conditions, observed generation, error reason. |
+| Requeue | Should this be checked again? | Immediate retry, delayed retry, or done. |
+
+The controller is successful when repeated reconciliation is safe. It does not need every API call to succeed the first time.
+
 ## Core Invariant
 
 Each reconcile pass should move the system closer to desired state or record a clear reason why it cannot, without making retries unsafe.
@@ -55,6 +71,22 @@ Backup name=daily users-db schedule=02:00 retention=7
 | Status | Record last observed state and errors. |
 
 If the create call times out, the controller must not blindly create duplicates on retry. It should observe again first.
+
+## State Or Flow Walkthrough
+
+A `PostgresBackup` object asks for a daily backup job.
+
+```text
+spec: schedule=02:00 retention=7 target=users-db
+observed: no CronJob exists
+plan: create CronJob owned by PostgresBackup
+act: create CronJob
+status: Ready=False, Reason=JobCreated
+next observe: CronJob exists with expected spec
+status: Ready=True
+```
+
+If the create call times out, the next reconcile should observe before creating again. The timeout means uncertainty, not proof that creation failed.
 
 ## Implementation Shape
 
@@ -81,9 +113,27 @@ Good controllers are boring in the best way: deterministic diffs, explicit statu
 | Acting on stale assumptions | Controller fights other actors. |
 | Requeue storm | A failing object burns CPU and API quota. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| Kubernetes controller project ladder | Desired/observed state, deterministic diffs, safe actions, and status conditions. |
+| Operator for PostgreSQL backups | External resource ownership, retry safety, finalizers, and operational status. |
+| Admission controller and scheduler labs | Policy boundaries and control-plane decision points. |
+
 ## Exercise Bridge
 
 Kubernetes controller exercises use this concept directly: state model, operation planner, failure recovery, and integration simulation are all pieces of reconciliation. Before coding, define desired state, observed state, action set, and retry behavior.
+
+## Readiness Checklist
+
+You are ready to implement controller exercises when you can:
+
+- define desired state and observed state separately
+- list actions that are safe to retry
+- explain what status condition helps an operator
+- handle deletion and cleanup without leaking resources
+- avoid duplicate external resources after timeout
 
 ## Self-Check
 

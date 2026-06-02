@@ -31,6 +31,21 @@ user program -> syscall number + arguments -> kernel handler -> result
 
 The kernel should never trust the caller. The caller may pass invalid pointers, huge lengths, stale file descriptors, or arguments designed to trigger edge cases.
 
+## How It Works Step By Step
+
+A syscall is a controlled transition from less privilege to more privilege.
+
+| Step | What Happens | Risk If Wrong |
+| --- | --- | --- |
+| User prepares arguments | Registers or stack contain syscall number and values. | Bad pointers and invalid handles are still just numbers. |
+| Trap instruction executes | CPU switches into kernel-controlled entry code. | Broken save/restore corrupts user execution. |
+| Kernel dispatches | Syscall number selects a handler. | Unknown numbers must fail safely. |
+| Handler validates | File descriptors, lengths, flags, and user memory are checked. | Trusting user input can crash or corrupt the kernel. |
+| Kernel performs work | Files, process tables, VM, or devices are accessed. | Locking and partial failure semantics matter. |
+| Result returns | Success value or error code is placed for user code. | Ambiguous errors make applications unreliable. |
+
+A syscall handler should be paranoid and boring. It should reject nonsense early, copy data carefully, and leave the kernel consistent even when the caller is hostile.
+
 ## Core Invariant
 
 Untrusted user input must not let user code corrupt kernel memory, access another process's private state, or crash the kernel.
@@ -51,6 +66,21 @@ Consider `read(fd, user_buffer, n)`.
 | Return result | Restore user execution with byte count or error code. |
 
 If the user buffer points into kernel memory, the syscall must reject it. If it crosses an unmapped page, the kernel must handle that safely.
+
+## State Or Flow Walkthrough
+
+For `write(fd, user_buffer, n)`, the kernel does not receive a safe byte slice. It receives an address and a length from untrusted code.
+
+```text
+user memory:        [ bytes to write ]
+user registers:     fd, pointer, length
+trap entry:         save state, switch privilege
+kernel validation:  fd exists, pointer range readable
+copy/write path:    move bytes to file/socket/device
+return path:        byte count or error
+```
+
+The pointer might be null, point to unmapped memory, cross a page boundary, or name memory the process cannot read. The kernel must handle all of those cases without panicking.
 
 ## Implementation Shape
 
@@ -77,9 +107,27 @@ Clear helper boundaries matter because validation bugs are often repeated across
 | Wrong error semantics | Applications cannot recover correctly. |
 | Holding locks across user copy | Page faults or slow paths can deadlock kernel code. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| `os/001-syscall-boundary` | Syscall dispatch, argument validation, user-pointer safety, and error return rules. |
+| `os/002-virtual-memory` | Address translation, permission checks, and page-level reasoning. |
+| Kernel project ladders | Trap handling, process lifecycle, file-system calls, and kernel lock-ordering concerns. |
+
 ## Exercise Bridge
 
 OS exercises use this concept for syscall dispatch, virtual memory validation, traps, fork/exec/wait behavior, and file-system calls. Before implementing a syscall, list which arguments are untrusted and which resources need ownership checks.
+
+## Readiness Checklist
+
+You are ready to implement syscall exercises when you can:
+
+- explain why a user pointer is not a kernel pointer
+- list which arguments need validation before use
+- describe what state trap entry must preserve
+- return errors without corrupting kernel state
+- separate authorization failure from malformed input
 
 ## Self-Check
 

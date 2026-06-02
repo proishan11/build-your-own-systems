@@ -38,6 +38,22 @@ loss gradient -> add gradient -> multiply gradient -> parameter gradients
 
 Each operation knows how to pass gradient information to its inputs.
 
+## How It Works Step By Step
+
+Autograd is a bookkeeping system for the chain rule.
+
+| Step | What Happens | Why It Matters |
+| --- | --- | --- |
+| Create tensors | Values may or may not require gradients. | The engine knows what to track. |
+| Run forward ops | Each operation computes output data. | The model produces a prediction and loss. |
+| Record parents | Outputs remember which inputs created them. | The graph can be traversed backward. |
+| Store backward rule | Each op knows local derivatives. | Gradients can be propagated. |
+| Topologically sort | Nodes are ordered from loss back to leaves. | Parents receive complete downstream gradients. |
+| Accumulate gradients | Contributions from multiple paths are added. | Shared values train correctly. |
+| Optimizer step | Parameters are updated and gradients cleared. | Training moves to the next iteration. |
+
+The graph is a temporary explanation of one computation. The parameters are the long-lived state being trained.
+
 ## Core Invariant
 
 For every differentiable operation, the backward rule must propagate gradients that match the forward computation's local derivative and tensor shapes.
@@ -61,6 +77,19 @@ loss = (y - target)^2
 | `loss` | Scalar error. |
 
 Autograd records multiplication, addition, subtraction, and square operations. Backward computes how much changing `w` or `b` would change the loss. The optimizer then nudges `w` and `b` in the direction that reduces loss.
+
+## State Or Flow Walkthrough
+
+For:
+
+```text
+y = w * x + b
+loss = (y - target)^2
+```
+
+The backward pass starts with `d loss / d loss = 1`. The square operation sends gradient to `(y - target)`. The subtraction sends gradient to `y`. The addition sends gradient to `w * x` and `b`. The multiplication sends gradient to `w` and `x`.
+
+If `w` appears in two branches of the graph, both branches contribute to `w.grad`. Assigning instead of accumulating silently loses learning signal.
 
 ## Implementation Shape
 
@@ -88,9 +117,28 @@ Gradient accumulation is intentional. If a value feeds two downstream paths, bot
 | Exploding gradients | Training becomes unstable. |
 | No checkpointing | Long training jobs lose progress on failure. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| Autograd engine | Tensor graph construction, topological backward, gradient accumulation. |
+| Mini deep learning framework | Modules, parameters, losses, optimizers, and training loops. |
+| Distributed training simulator | Checkpointing, gradient synchronization, and failure recovery. |
+| Inference server | Separates training-time graph concerns from serving-time latency and batching. |
+
 ## Exercise Bridge
 
 ML systems exercises should make tensors, autograd, optimizers, training loops, checkpointing, and inference serving explicit. Before implementing, write down the forward value each operation saves for its backward rule.
+
+## Readiness Checklist
+
+You are ready for ML systems exercises when you can:
+
+- draw the computation graph for a small expression
+- explain why backward runs in reverse topological order
+- distinguish parameter data from gradient data
+- explain why gradients accumulate
+- say what a checkpoint must save to resume training
 
 ## Self-Check
 

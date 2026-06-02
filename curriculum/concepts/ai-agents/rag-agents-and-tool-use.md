@@ -42,6 +42,24 @@ goal -> plan -> tool call -> observation -> update state -> next action
 
 Production systems often combine both. An agent may call retrieval, inspect logs, query a database, ask for approval, and then take a limited action.
 
+## How It Works Step By Step
+
+RAG and agents should be built as explicit systems, not as one giant prompt.
+
+| Step | RAG Or Agent Component | Responsibility |
+| --- | --- | --- |
+| Ingest | Loader and chunker | Turn source material into stable searchable units. |
+| Index | Embeddings, lexical index, or graph | Make retrieval possible. |
+| Retrieve | Retriever | Select candidate evidence for a query. |
+| Rerank | Reranker or scorer | Put the strongest evidence first. |
+| Plan | Model or runtime | Decide whether an answer or tool call is needed. |
+| Act | Tool executor | Call allowed tools with structured arguments. |
+| Observe | Runtime state | Record tool results exactly. |
+| Synthesize | Model | Produce answer grounded in evidence and observations. |
+| Evaluate | Eval harness | Measure retrieval, groundedness, tool safety, and task success. |
+
+Every step should leave enough trace data that a failure can be debugged later.
+
 ## Core Invariant
 
 The system must keep evidence, generated text, tool observations, and authority boundaries explicit.
@@ -59,6 +77,23 @@ A support assistant receives: "Why did invoice 123 fail?"
 | Agentic | Plan investigation, call tools, summarize evidence, create a ticket, and ask a human before issuing a refund. |
 
 The last flow is more powerful, but every new action introduces state, security, and recovery concerns.
+
+## State Or Flow Walkthrough
+
+A production agent answering "Why did deployment 42 fail?" might run this timeline:
+
+```text
+1. record user goal
+2. retrieve deployment docs and recent incident notes
+3. call deployment API for rollout status
+4. call logs API for failed pods
+5. observe image pull error
+6. draft explanation with citations and observations
+7. ask for approval before rollback
+8. if approved, call rollback tool and record result
+```
+
+The model decides parts of the flow, but the runtime owns the durable state, tool permissions, approval gates, and trace.
 
 ## Implementation Shape
 
@@ -87,9 +122,29 @@ Do not hide all of this inside one prompt. The prompt is only one part of the sy
 | Lost checkpoint | A long-running agent cannot recover after process restart. |
 | Silent mutation | A tool changes real state without trace or approval. |
 
+## Exercise Mapping
+
+| Exercise | Concept Piece It Uses |
+| --- | --- |
+| RAG from scratch | Chunking, retrieval, reranking, citations, and grounded answer generation. |
+| GraphRAG knowledge system | Relationship-aware retrieval and evidence graph traversal. |
+| Agent runtime | State, tool schemas, observations, retries, and checkpoints. |
+| MCP server/client lab | Tool protocol boundaries and structured capability exposure. |
+| LLM evals harness | Retrieval quality, groundedness, and tool-safety measurement. |
+
 ## Exercise Bridge
 
 RAG exercises should force you to implement chunking, retrieval, citation, and evaluation separately. Agent exercises should force you to model state, tool schemas, retries, approval, and traces. Before coding, name which components are read-only and which can mutate the world.
+
+## Readiness Checklist
+
+You are ready for RAG/agent exercises when you can:
+
+- separate generated text from retrieved evidence
+- identify which tools are read-only and which mutate state
+- explain where prompt injection can cross a boundary
+- define what a trace must record
+- evaluate retrieval separately from final answer quality
 
 ## Self-Check
 

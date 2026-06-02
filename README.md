@@ -107,21 +107,25 @@ tools/learn.py next --track go-concurrency
 | Distributed Systems | [Distributed Systems Staff Lab](curriculum/projects/distributed-systems-staff-lab/project.md) | Raft, replicated logs, sharding, leases, membership, failure injection |
 | Database Systems | [Database Systems Staff Lab](curriculum/projects/database-systems-staff-lab/project.md) | WAL, storage engines, indexes, MVCC, query execution, transactions |
 
+The self-contained learner path starts at [Learning Plan](curriculum/learning-plan.md).
+
 The broader catalog starts at [Project Catalog](curriculum/catalog/project-catalog.md) and continues as book-style chapters under [curriculum/catalog/chapters](curriculum/catalog/chapters/).
 
-Self-contained concept chapters live in [Concept Library](curriculum/concepts/INDEX.md).
+Self-contained concept chapters live in [Concept Library](curriculum/concepts/INDEX.md), now covering 128 bookified chapters.
 
 The full roadmap lives in:
 
 - [Full Curriculum Plan](curriculum/roadmap/full-curriculum-plan.md), with detailed roadmap chapters under [curriculum/roadmap/chapters](curriculum/roadmap/chapters/)
 - [Scaffolding Sequence](curriculum/roadmap/scaffolding-sequence.md)
 - [Concept Backlog](curriculum/roadmap/concept-backlog.md)
+- [Concept Bookification Plan](curriculum/roadmap/concept-bookification-plan.md)
 - [Implementation Status](curriculum/roadmap/implementation-status.md)
 
 ## Documentation
 
 Start here:
 
+- [Learning Plan](curriculum/learning-plan.md)
 - [Getting Started](docs/getting-started.md)
 - [Learning Workflow](docs/learning-workflow.md)
 - [Using the AI Coach](docs/using-the-ai-coach.md)
